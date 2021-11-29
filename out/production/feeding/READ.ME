@@ -1,0 +1,30 @@
+/**
+Чтобы скомпилировать файлы модуля, нужно использовать:
+
+ javac --module-path mods -d feeding feeding/zoo/animal/feeding/*.java feeding/module-info.java
+
+
+--module-path - (кратко: -p) - показывает на директорию с кастомными модулями
+
+-d директория куда положим скомпилированные .class
+
+после указываются файлы, которые нужно скомпилировать (через пробел)
+
+
+
+ Чтобы запустить модуль, нужно использовать: (пути через точку)
+ java --module-path feeding --module feeding/zoo.animal.feeding.Task
+
+ --module-path - (кратко: -p) - показывает на директорию с скомпилированными модулями
+ + ВАЖНО, что тут лежит module-info и там прописано имя модуля
+
+ --module - (кратко: -m) - путь до скомпилированного модуля
+
+ до слеша - zoo.animal.feeding: имя модуля ( в нашем случае просто feeding )
+ после слеша - zoo.animal.feeding.Task - пакет.исполняемый класс
+
+
+ */
+
+ // Packaging Our First Module
+ // jar -cvf mods/feeding.jar -C feeding/ .

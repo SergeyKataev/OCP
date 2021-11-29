@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/src/OCP.iml" filepath="$PROJECT_DIR$/src/OCP.iml" />
+      <module fileurl="file://$PROJECT_DIR$/beginner/beginner.iml" filepath="$PROJECT_DIR$/beginner/beginner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/calcIMPL/calcIMPL.iml" filepath="$PROJECT_DIR$/calcIMPL/calcIMPL.iml" />
+      <module fileurl="file://$PROJECT_DIR$/calculatorAPI/calculatorAPI.iml" filepath="$PROJECT_DIR$/calculatorAPI/calculatorAPI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/care/care.iml" filepath="$PROJECT_DIR$/care/care.iml" />
+      <module fileurl="file://$PROJECT_DIR$/feeding/feeding.iml" filepath="$PROJECT_DIR$/feeding/feeding.iml" />
+      <module fileurl="file://$PROJECT_DIR$/testModule/testModule.iml" filepath="$PROJECT_DIR$/testModule/testModule.iml" />
+    </modules>
+  </component>
+</project>
