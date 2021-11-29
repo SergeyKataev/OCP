@@ -27,7 +27,8 @@ class FinalEx1 {
         final long lemur;
         if (isWeekend) lemur = 5;
 //        giraffe = 3; // DOES NOT COMPILE  - финальная переменная, повторная инициализация
-//        System.out.println(giraffe+" "+lemur); // DOES NOT COMPILE    - не инициализирована переменная. Можем не попасть в if
+//        System.out.println(giraffe+" "+lemur); // DOES NOT COMPILE    - не инициализирована переменная.
+//          Можем не попасть в if
 //    }
     }
 }
@@ -35,7 +36,8 @@ class FinalEx1 {
 // Adding final to Instance and static Variables
 // Instance and static class variables can also be marked final.
 
-/* If an instance variable is marked final, then it must be assigned a value when it is declared or when the object is instantiated.*/
+/* If an instance variable is marked final, then it must be assigned a value when it is
+    declared or when the object is instantiated.*/
 class PolarBear {
     final int age = 10;
     final int fishEaten;    // инициируется в блоке инициализации
@@ -89,6 +91,7 @@ final class Reptile {
 
 
 // Working with Enums
+// Пример энама:
 enum Season {
     WINTER, SPRING, SUMMER, FALL
 }
@@ -125,7 +128,7 @@ class EnumEx2 {
     // Enums can be used in switch statements
     public static void main(String[] args) {
         Season summer = Season.SUMMER;
-        switch (summer) {
+        switch (summer) {  // Time for the pool!
             case WINTER:
                 System.out.println("Get out the sled!");
                 break;
@@ -141,7 +144,11 @@ class EnumEx2 {
             default:
                 System.out.println("Is it summer yet?");
         }
-        // Time for the pool!
+
+        //
+        Season2.WINTER.printExpectedVisitors();  // "Low"
+
+
     }
 }
 
@@ -149,14 +156,15 @@ class EnumEx2 {
 enum Season2 {
     WINTER("Low"), SPRING("Medium"), SUMMER("High"), FALL("Medium");
     // если кроме значений есть что то еще, то нужна ;
-    private final String expectedVisitors; // т.к. энам шарится на всю jvm, то хорошей практикой будет делать переменные энама приватными
+    private final String expectedVisitors; // т.к. энам шарится на всю jvm, то хорошей практикой будет
+        // делать переменные энама приватными
 
-    private Season2(String expectedVisitors) {      // All enum constructors are implicitly private. . An enum constructor will not compile if it contains a public or protected modifier.
+    private Season2(String expectedVisitors) {       // All enum constructors are implicitly private.
+        // An enum constructor will not compile if it contains a public or protected modifier.
         this.expectedVisitors = expectedVisitors;
     }
 
     public void printExpectedVisitors() {
-
         System.out.println(expectedVisitors);
     }
 }
@@ -209,10 +217,16 @@ enum Season3 {
         }
     };
 
-    public abstract String getHours();  // The enum itself has an abstract method.  Каждое значение энама должно имплеметировать этот метод
+    public abstract String getHours();  // The enum itself has an abstract method.
+        // Каждое значение энама должно имплеметировать этот метод
+
+    // не абстрактные методы не внутри самого энама нельзя
+    // внутри энама можно писать не абстрактные методы
 }
 
-// Если не хотим для каждого значения энама рисовать свою реализацию, то можем начнать дефолтную реализацию и описать только специфические энамы
+
+// Если не хотим для каждого значения энама рисовать свою реализацию,
+// то можем начнать дефолтную реализацию и описать только специфические энамы
 enum Season4 {
     WINTER {
         public String getHours() {
@@ -239,7 +253,6 @@ enum Season4 {
 // Local class: A class defined within a method body
 // Anonymous class: A special case of a local class that does not have a name
 
-
 // Declaring an Inner Class
 
 // 1.Can be declared public, protected, package-private (default), or private
@@ -262,7 +275,6 @@ class Outer {
 
     static int a = 0;
 
-
     protected class Inner {
         // Можно любые access modifier
         // Можно abstract или final
@@ -275,13 +287,15 @@ class Outer {
 //        }
         final static int a = 0; // Можно  final static  переменную
 
-
         // Доступ
         // к приватным нестатичным переменным! Без ссылки на класс родитель
         public void go() {
             for (int i = 0; i < 3; i++)
                 // Can access instance members of enclosing class without a reference
                 System.out.print(greeting + " ");   // доступ к Instance variables без ссылки
+//            System.out.println(Outer.greeting);   // к нестатичной переменной нельзя обращаться через ссылку
+            System.out.println(a);                  // к статичной переменной можно без ссылки
+            System.out.println(Outer.a);            // к статичной переменной можно через ссылку
         }
 
 
@@ -298,8 +312,6 @@ class Outer {
         public void callStaticVal() {
             System.out.println(a);
         }
-
-
     }
 
     public void callInner() {
@@ -357,10 +369,12 @@ class Fox {
     private class Den {
     }
 
+    // если метод не статичый
     public void goHome() {
         new Den();  // goHome() is an instance method, and therefore the call is associated with the this instance.
     }
 
+// если метод статичный
     public static void visitFriend() {
 //        new Den(); // DOES NOT COMPILE - it is called inside a static method.
         new Fox().new Den(); // так можно, через создание объекта
@@ -369,19 +383,18 @@ class Fox {
 
 class Squirrel {
     public void visitFox() {
+        // Вызываем из другого класса
 //        new Den(); // DOES NOT COMPILE - нельзя вызывать внутренний класс без создания внешнего
 //        new Fox().new Den(); - так тоже нельзя, потому что конструктор приватный, если будет public, то ок
-
+        new Fox();
     }
 }
 
 
 // Creating a static Nested Class - it can't access instance variables or methods in the outer class directly
-// it is like a top-level class except for the following:
 
-//        * The nesting creates a namespace because the enclosing class name must be used to refer to it.
-//        * It can be made private or use one of the other access modifiers to encapsulate it.
-// * внешни класс может вызывать внутренние переменные и методы.
+// * может использовать любой access modifier
+// * внешний класс может вызывать внутренние переменные и методы.
 // * внутренний класс не может дергать внешние нестатичные методы/переменные
 
 class Enclosing {
@@ -403,22 +416,25 @@ class Enclosing {
         // Можно abstract или final
 
         // декларирование:
+        // можно нестатичный и статичные методы
         static int a = 0; // можно статичные переменные
-
         static void innerStaticMethod() { // можно статичные методы
             hello();
         }
-
         final static int b = 0; // Можно  final static  переменную
 
+        int c = 0;                                                      //можно обратиться через создание объекта
+        String innetNonStaticMethod() {return "innetNonStaticMethod";} // можно обратиться через создание объекта
 
         // Доступ
-        // к нестатичным переменным отсутствует!!!
+        // к нестатичным переменным верхнего класса отсутствует!!!
         private void callMethods() {
             System.out.println(a);
             hello();
 //            System.out.println(greetingMethod()); // нельзя доступ к нестатичным методы
 //            System.out.println(greeting);         // нельзя доступ к нестатичным поля
+            System.out.println(c);                       // можно к нестатичным, но внутренним(определенным во внутреннем статичным методе) переменным
+            System.out.println(innetNonStaticMethod()); // можно к нестатичным, но внутренним(определенным во внутреннем статичным методе) методам
         }
     }
 
@@ -428,6 +444,12 @@ class Enclosing {
         nested.callMethods();   // доступ к приватной переменной/методу внутреннего статичного класса
         nested.innerStaticMethod(); // доступ к статичному методы
         System.out.println(nested.a); // доступ к статичной переменной
+
+        System.out.println(nested.c); // внутри статичного класса создал нестатичную переменную, к ней не обратиться
+//        System.out.println(Nested.c); // по ссылке не обратиться, нужен экземпляр
+        System.out.println(nested.innetNonStaticMethod()); //внутри статичного класса создал нестатичную переменную, к ней не обратиться
+//        System.out.println(Nested.innetNonStaticMethod()); // по ссылке не обратиться, нужен экземпляр
+
     }
 }
 
@@ -436,10 +458,9 @@ class Enclosing {
 
 // Local classes have the following properties:
 // 1. They do not have an access modifier.
-// 2. They cannot be declared static and cannot declare static fields or methods, except for static final fields.
+// 2. They cannot be declared static and cannot declare static fields or methods, except for final static fields.
 // 3. They have access to all fields and methods of the enclosing class (when defined in an instance method).
 // 4. They can access local variables (переменные метода) if the variables are final or effectively final.
-
 
 /*  effectively final refers to a local variable whose value does not change after it is set. */
 
@@ -448,8 +469,6 @@ class PrintNumbers {
 
     private void methodClass() {
     }
-
-    ;
 
     public void calculate() {
         final int width = 20;
@@ -462,6 +481,7 @@ class PrintNumbers {
             // 3. They have access to all fields and methods of the enclosing class
             public void multiply() {
                 System.out.print(length * width);   // доступ к приватной переменной класса без ссылки на класс
+//                System.out.print(MyLocalClass.length * width);   // через ссылку нельзя
                 methodClass();                      // доступ к приватному методу класса    без ссылки на класс
             }
 
@@ -512,7 +532,6 @@ class ZooGiftShop {
     public int admission(int basePrice) {
         // нет модификатора доступа
         // нельзя указать final или abstract
-
         SaleTodayOnly sale = new SaleTodayOnly() {
             final static int a = 0;
 //            static int b = 0; - нельзя
@@ -523,10 +542,10 @@ class ZooGiftShop {
                 System.out.println(instanceParam);
                 instanceMethod();
 
-
                 int a = 1;
                 return 3;
             }
+
         }; // Don't forget the semicolon!
         return basePrice - sale.dollarsOff();
     }
@@ -710,6 +729,13 @@ class Bunny implements Hop {
 
 
 // Introducing private Interface Methods
+/*
+Private Interface Method Definition Rules
+    1. A private interface method must be marked with the private modifier and include a method body.
+    2. A private interface method may be called only by default and private (non- static)
+            methods within the interface definition.
+    3. Сannot be declared abstract since they are not inherited.
+ */
 interface Schedule {
     default void wakeUp() {
         checkTime(7);
@@ -737,14 +763,14 @@ interface Schedule {
     }
 }
 
-/*
-Private Interface Method Definition Rules
-    1. A private interface method must be marked with the private modifier and include a method body.
-    2. A private interface method may be called only by default and private (non- static) methods within the interface definition.
-    3. Сannot be declared abstract since they are not inherited.
- */
+
 
 // Introducing private static Interface Methods
+/*
+Private Static Interface Method Definition Rules
+    1. A private static method must be marked with the private and static modifiers and include a method body.
+    2. A private static interface method may be called only by other methods within the interface definition.
+ */
 interface Swim {
     private static void breathe(String type) {
         System.out.println("Inhale");
@@ -752,7 +778,6 @@ interface Swim {
         System.out.println("Exhale");
         butterfly(); // можно вызвать статичный метод
 //        backstroke(); // не статичный метод из статичного вызывать нельзя
-
     }
 
     static void butterfly() {
@@ -775,12 +800,6 @@ interface Swim {
     // По аналогии, что в классе можно из метода вызывать другой метод
 
 }
-
-/*
-Private Static Interface Method Definition Rules
-    1. A private static method must be marked with the private and static modifiers and include a method body.
-    2. A private static interface method may be called only by other methods within the interface definition.
- */
 
 
 // Accessible from default and private methods within the interface definition?
@@ -808,6 +827,7 @@ interface One {
         staticPrivateMethod();// доступен статичный приватный метод - к статичным можно обращаться через One.
     }
 
+    public void publicMethod();
 
     abstract void absMethod();
 
@@ -825,34 +845,35 @@ interface One {
 }
 
 
-// В классе, который имплементит интерфейс доступны только абстрактные и дофолтные классы + константа
+// В классе, который имплементит интерфейс доступны только абстрактные и дофолтные классы + константа + публичные
 // статичные и приватные - недоступны при наследовании
 class TestInterface implements One {
     @Override
-    public void absMethod() {
+    public void publicMethod() {
         System.out.println(a);  // константа доступна
     }
 
     @Override
-    public void defaultMethod() {
+    public void absMethod() {
+    }
 
+    @Override
+    public void defaultMethod() {
     }
 }
 
 
-// В любом классе, который не имплементит интерфейс - доступна только констанда и не приватный, статичный метод
+// В любом классе, который не имплементит интерфейс - доступна только констанда и не приватный - статичный метод
 class TestInterface2 {
     public static void main(String[] args) {
         System.out.println(One.a);          // доступна константа
-        One.staticMethod();                 // доступен нестатический метод
-
+        One.staticMethod();                 // доступен не приватный - статичный метод
     }
 }
 
 // Introducing Functional Programming
 
-@FunctionalInterface
-        //  it contains exactly one abstract method
+@FunctionalInterface //  it contains exactly one abstract method
 interface Sprint {
     public void sprint(int speed);
 }
