@@ -727,7 +727,6 @@ class Bunny implements Hop {
     }
 }
 
-
 // Introducing private Interface Methods
 /*
 Private Interface Method Definition Rules
@@ -736,6 +735,7 @@ Private Interface Method Definition Rules
             methods within the interface definition.
     3. Сannot be declared abstract since they are not inherited.
  */
+
 interface Schedule {
     default void wakeUp() {
         checkTime(7);
