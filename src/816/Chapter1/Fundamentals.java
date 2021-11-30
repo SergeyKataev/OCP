@@ -857,6 +857,7 @@ class TestInterface implements One {
     public void absMethod() {
     }
 
+
     @Override
     public void defaultMethod() {
     }

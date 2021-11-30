@@ -99,8 +99,9 @@ class ComparatorEx {
 
 
 class VariablesInLambdas {
-    // Variables can appear in three places with respect to lambdas: the
-    // parameter list, local variables declared inside the lambda body, and
+    // Variables can appear in three places with respect to lambdas:
+    // the parameter list,
+    // local variables declared inside the lambda body,
     // variables referenced from the lambda body.
 
     // Parameter List
@@ -163,7 +164,7 @@ class VariablesInLambdas {
         }
     }
 
-    // тут будут ошибки компиляции (! относится только к локальным переменным и парамтрам метода. Они не должны меняться посе назначения).
+    // тут будут ошибки компиляции (! относится только к локальным переменным и парамтрам метода. Они не должны меняться после назначения).
     // переменные класса, статические переменные, параметры лямбда могут спокойно меняться
     class Crow3 {
         private String color;
