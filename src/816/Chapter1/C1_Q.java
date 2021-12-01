@@ -1,5 +1,10 @@
 package Chapter1;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class C1_Q {
 }
 
@@ -16,16 +21,18 @@ class Q1 {
 class Q2 {
     // What is the result of the following program?
 }
+
 class FlavorsEnum {
     enum Flavors {
         VANILLA, CHOCOLATE, STRAWBERRY;     // тут была ошибка не поставлена ;
         // When an enum contains only a list of values, the semicolon (;) after the list is optional.
         static final Flavors DEFAULT = STRAWBERRY;
 //        final Flavors DEFAULT = STRAWBERRY; - так нельзя
-        }
+    }
+
     public static void main(String[] args) {
-        for(final var e : Flavors.values())
-            System.out.print(e.ordinal()+" "); // 0 1 2
+        for (final var e : Flavors.values())
+            System.out.print(e.ordinal() + " "); // 0 1 2
     }
 }
 
@@ -43,14 +50,19 @@ class Q3 {
 
 class Movie {
     private int butter = 5;
-    private Movie() {}
+
+    private Movie() {
+    }
+
     protected class Popcorn {  // Inner класс может иметь любой уровень доступа
-        private Popcorn() {}
+        private Popcorn() {
+        }
+
         //         public static int butter = 10;  // Inner class не может определять static поля или методы.
-                // Можно только static final переменные
+        // Можно только static final переменные
         public void startMovie() {
             System.out.println(Movie.this.butter); // внутренний класс имеет доступ к внешней переменной.
-                // если все ок, то напечатает 10
+            // если все ок, то напечатает 10
             // Чтобы обратиться к butter из Movie - Movie.this.butter
         }
     }
@@ -58,9 +70,11 @@ class Movie {
 
     public static void main(String[] args) {
         var movie = new Movie();
-        Movie.Popcorn in = new Movie().new Popcorn() {};  // так можно определять, даже если конструктор приватный
+        Movie.Popcorn in = new Movie().new Popcorn() {
+        };  // так можно определять, даже если конструктор приватный
         in.startMovie();
-    } }
+    }
+}
 
 // A. The output is 5.
 //B. The output is 10.
@@ -148,18 +162,24 @@ class Q7 {
 }
 
 class IceCream {
-enum Flavors {
-CHOCOLATE, STRAWBERRY, VANILLA               // если только перечисления, то можно без ;
-}
-public static void main(String[] args) {
-Flavors STRAWBERRY = null;
-switch (STRAWBERRY) {           // нельзя передавать null, будет NPE. Так можно Flavors STRAWBERRY = Flavors.STRAWBERRY;
-case VANILLA: System.out.print("v");   // нельзя так делать перечисления. Нужно указывать только значение "VANILLA"
-case CHOCOLATE: System.out.print("c");
-case STRAWBERRY: System.out.print("s");
-break;
-default: System.out.println("missing flavor"); }
-}
+    enum Flavors {
+        CHOCOLATE, STRAWBERRY, VANILLA               // если только перечисления, то можно без ;
+    }
+
+    public static void main(String[] args) {
+        Flavors STRAWBERRY = null;
+        switch (STRAWBERRY) {           // нельзя передавать null, будет NPE. Так можно Flavors STRAWBERRY = Flavors.STRAWBERRY;
+            case VANILLA:
+                System.out.print("v");   // нельзя так делать перечисления. Нужно указывать только значение "VANILLA"
+            case CHOCOLATE:
+                System.out.print("c");
+            case STRAWBERRY:
+                System.out.print("s");
+                break;
+            default:
+                System.out.println("missing flavor");
+        }
+    }
 }
 
 
@@ -167,10 +187,10 @@ class Q8 {
     // Which statements about functional interfaces are true? (Choose all that apply.)
 
     // A. A functional interface can contain default and private methods. // Correct, может содердать, главное один SAM
-                    // can contain any number of nonabstract methods including default, private, static, and private static.
+    // can contain any number of nonabstract methods including default, private, static, and private static.
     // B. A functional interface can be defined by a class or interface.  - только интерфейс
     // C. Abstract methods with signatures that are contained in public methods of java.lang.Object do
-            // not count toward the abstract method count for a functional interface.  // Correct
+    // not count toward the abstract method count for a functional interface.  // Correct
     // D. A functional interface cannot contain static or private static methods.    // Может содержать, главное один SAM
     // E. A functional interface contains at least one abstract method.              // не at least, а ровно 1 SAM
     // F. A functional interface must be marked with the @FunctionalInterface annotation.   // не must, а желательно
@@ -205,21 +225,24 @@ class Q9 {
 }
 
 class Ghost {
-public static void boo() {
-System.out.println("Not scared");
-}
-protected  class Spirit {  // внутренний класс может иметь любой access modifier. FINAL!!!!
-public void boo() {
-System.out.println("Booo!!!");
-}
-}
-public static void main(String... haunt) {
+    public static void boo() {
+        System.out.println("Not scared");
+    }
+
+    protected class Spirit {  // внутренний класс может иметь любой access modifier. FINAL!!!!
+        public void boo() {
+            System.out.println("Booo!!!");
+        }
+    }
+
+    public static void main(String... haunt) {
 //var g = new Ghost().new Spirit() {};  // используется анонимный внутренний класс, который наследуется от Ghost.
-            // Spirit финальный и не может использовать в такой конструкции
-    var g = new Ghost().new Spirit() {};
+        // Spirit финальный и не может использовать в такой конструкции
+        var g = new Ghost().new Spirit() {
+        };
 
 // __________________________________ ;
-}
+    }
 }
 
 class Q10 {
@@ -246,27 +269,44 @@ class Q10 {
 class Q11 {
     // What is the result of the following code?
 }
+
 interface CanWalk {
-     default void walk() { System.out.print("Walking"); }   // нужно переопределять.
-     private void testWalk() {}                         // private и static не нужно переопределять
-            // При extend не работают правила, как при implement
+    default void walk() {
+        System.out.print("Walking");
+    }   // нужно переопределять.
+
+    private void testWalk() {
+    }                         // private и static не нужно переопределять
+    // При extend не работают правила, как при implement
 }
+
 interface CanRun {
-     abstract public void run();
-     private void testWalk() {}     // private и static не нужно переопределять. ПРи extend не работают правила,
-            // как при implement
-     default void walk() { System.out.print("Running"); }
+    abstract public void run();
+
+    private void testWalk() {
+    }     // private и static не нужно переопределять. ПРи extend не работают правила,
+
+    // как при implement
+    default void walk() {
+        System.out.print("Running");
+    }
 }
+
 interface CanSprint extends CanWalk, CanRun {   // не переопределен walk() из CanWalk
-     void sprint();
-     default void walk(int speed) {
-     System.out.print("Sprinting");
-     }
+    void sprint();
 
-     private void testWalk() {}
+    default void walk(int speed) {
+        System.out.print("Sprinting");
+    }
 
-    default void walk(){}; // без этой строки не полетит
-     }
+    private void testWalk() {
+    }
+
+    default void walk() {
+    }
+
+    ; // без этой строки не полетит
+}
 
 
 // A. The code compiles without issue.
@@ -284,10 +324,12 @@ class Q12 {
 interface Sing {
     boolean isTooLoud(int volume, int limit);
 }
+
 class OperaSinger {
     public static void main(String[] args) {
 //        check((h, l) -> h.toString(), 5); // m1    у Sing нет метода toString. Это не Object
     }
+
     private static void check(Sing sing, int volume) {
         if (sing.isTooLoud(volume, 10)) // m2  isToLoud будет выполняться логика из лямбды
             System.out.println("not so great");
@@ -320,25 +362,30 @@ class Q14 {
 }
 
 class Deer {
- enum Food {APPLES, BERRIES, GRASS}
- protected class Diet {           // inner class
- private Food getFavorite() {
- return Food.BERRIES;
- }
- }
- public static void main(String[] seasons) {
-// switch(new Diet().getFavorite()) {  // нельзя дергать new Diew() без создания Deer. или сделать Diet static
-switch(new Deer().new Diet().getFavorite()) {  // так полетит
-         case APPLES: System.out.print("a");
- case BERRIES: System.out.print("b");
- default: System.out.print("c");
- }
- }
- }
+    enum Food {APPLES, BERRIES, GRASS}
 
- class Q15 {
+    protected class Diet {           // inner class
+        private Food getFavorite() {
+            return Food.BERRIES;
+        }
+    }
+
+    public static void main(String[] seasons) {
+// switch(new Diet().getFavorite()) {  // нельзя дергать new Diew() без создания Deer. или сделать Diet static
+        switch (new Deer().new Diet().getFavorite()) {  // так полетит
+            case APPLES:
+                System.out.print("a");
+            case BERRIES:
+                System.out.print("b");
+            default:
+                System.out.print("c");
+        }
+    }
+}
+
+class Q15 {
     //Which of the following are printed by the Bear program? (Choose all that apply.)
- }
+}
 
 
 // class Bear {
@@ -431,16 +478,18 @@ class Q18 {
 }
 
 class Lion {
- class Cub {}
- static class Den {}
- static void rest() {   // статичный класс может обращаться только к статичным переменным/методам
+    class Cub {
+    }
+
+    static class Den {
+    }
+
+    static void rest() {   // статичный класс может обращаться только к статичным переменным/методам
 // _______________;
 
 
-
-
-
- } }
+    }
+}
 
 // A. Cub a = Lion.new Cub()                // нельзя, так можно Cub a = new Lion().new Cub();
 // B. Lion.Cub b = new Lion().Cub()         // нельзя, так можно Cub a = new Lion().new Cub();
@@ -450,6 +499,188 @@ class Lion {
 // F. Lion.Den f = Lion.new Den()           // нельзя, так можно var e = new Lion().new Den();
 // G. Lion.Den g = new Lion.Den()           // Correct, т.к. Den - static    correct way to create an instance of the static nested Den class
 // H. var h = new Cub()                     // нельзя, если бы rest() был не статик, то можно
+
+
+class Q19 {
+    // Given the following program, what can be inserted into the blank line that would allow it to print
+    // Swim! at runtime?
+
+/*
+if a class or interface inherits two interfaces containing default methods with the same
+signature, then it must override the method with its own implementation.
+ */
+
+}
+
+// interface Swim {
+// default void perform() { System.out.print("Swim!"); }
+// }
+// interface Dance {
+// default void perform() { System.out.print("Dance!"); }
+// }
+// public class Penguin implements Swim, Dance {
+// public void perform() { System.out.print("Smile!"); }
+// private void doShow() {
+// ____________________
+// }
+// public static void main(String[] eggs) {
+// new Penguin().doShow();
+// }
+// }
+
+// A. super.perform();
+// B. Swim.perform();
+// C. super.Swim.perform();
+// D. Swim.super.perform();   // Correct
+// E. The code does not compile regardless of what is inserted into the blank.
+// F. The code compiles, but due to polymorphism, it is not possible to produce the requested output
+// without creating a new object.
+
+
+class Q20 {
+    // Which statements about effectively final variables are true? (Choose all that apply.)
+    // A. The value of an effectively final variable is not modified after it is set. // Correct
+    // B. A lambda expression can reference effectively final variables.              // Correct
+    // lambda expressions can access final and effectively final variables.
+    // C. A lambda expression can reference final variables.                          // Correct
+    // D. If the final modifier is added, the code still compiles.                    // Correct
+    // E. Instance variables can be effectively final.
+    // F. Static variables can be effectively final.
+}
+
+class Q21 {
+    // Which lines of the following interface do not compile? (Choose all that apply.)
+    /* Like classes, interfaces allow instance methods to access static members, but not vice versa. */
+
+    // 1: public interface BigCat {
+    // 2: abstract String getName();
+    // 3: static int hunt() { getName(); return 5; }  // нельзя из статичного метода вызывать нестатичный
+    // 4: default void climb() { rest(); }
+    // 5: private void roar() { getName(); climb(); hunt(); }
+    // 6: private static boolean sneak() { roar(); return true; }  // нельзя из статичного метода вызывать нестатичный
+    // 7: private int rest() { return 2; };
+    //}
+
+    // A. Line 2
+    // B. Line 3  // Correct
+    // C. Line 4
+    // D. Line 5
+    // E. Line 6  // Correct
+    // F. Line 7
+    // G. None of the above
+}
+
+
+class Q22 {
+// What are some advantages of using default interface methods? (Choose all that apply.)
+
+    // A. Automatic resource management
+    // B. Improve performance at runtime
+    // C. Better exception handling
+    // D. Backward compatibility                                // Correct
+    // E. Highly concurrent execution
+    // F. Convenience in classes implementing the interface     // Correct
+    //  default methods in some APIs offer a number of convenient methods to classes that implement the interface.
+}
+
+class Q23 {
+    // Which statements about the following enum are true? (Choose all that apply.)
+}
+
+// 1: public enum AnimalClasses {
+// 2: MAMMAL(true), INVERTIBRATE(Boolean.FALSE), BIRD(false),
+// 3: REPTILE(false), AMPHIBIAN(false), FISH(false) {
+// 4: public int swim() { return 4; }
+// 5: }                                         // в конце перечислений должна быть ;
+// 6: final boolean hasHair;   // final static
+// 7: public AnimalClasses(boolean hasHair) {    // Enum constructors are implicitly private
+// 8: this.hasHair = hasHair;
+// 9: }
+// 10: public boolean hasHair() { return hasHair; }
+// 11: public int swim() { return 0; }
+// 12: }
+
+
+// A. Compiler error on line 2
+//B. Compiler error on line 3
+//C. Compiler error on line 7           // Correct
+//D. Compiler error on line 8
+//E. Compiler error on line 10
+//F. Compiler error on another line     // Correct
+//G. The code compiles successfully.
+
+
+class Q24 {
+    // Which lambdas can replace the new Sloth() call in the main() method and produce the same output
+    //at runtime? (Choose all that apply.)
+}
+
+// import java.util.List;
+// interface Yawn {
+// String yawn(double d, List<Integer> time);
+// }
+// class Sloth implements Yawn {
+// public String yawn(double zzz, List<Integer> time) {
+// return "Sleep: " + zzz;
+// }
+// }
+// public class Vet {
+// public static String takeNap(Yawn y) {
+// return y.yawn(10, null);
+// }
+// public static void main(String... unused) {
+// System.out.print(takeNap(new Sloth()));
+// }
+
+
+// A. (z,f) -> { String x = ""; return "Sleep: " + x }   // отсутвует ;
+// B. (t,s) -> { String t = ""; return "Sleep: " + t; } // t - дважды определен
+// C. (w,q) -> {"Sleep: " + w}                          // отсутствует return и ;
+// D. (e,u) -> { String g = ""; "Sleep: " + e }         // отсутвутет return и ;
+// E. (a,b) -> "Sleep: " + (double)(b==null ? a : a)    // Correct  Sleep: 10.0.
+// F. (r,k) -> { String g = ""; return "Sleep:"; }      // лямбда ок, но нет - Sleep:
+// G. None of the above, as the program does not compile.
+
+
+class Q25 {
+    // What does the following program print
+}
+
+// A. x is 0
+// B. x is 24                   // Correct
+// C. Line 6 generates a compiler error.
+// D. Line 8 generates a compiler error.
+// E. Line 11 generates a compiler error.
+// F. None of the above
+
+class Zebra {
+    private int x = 24;
+    public int hunt() {
+        String message = "x is ";
+        abstract class Stripes {  // локальный класс
+            private int x = 0;      //  можно определять с таким же именем как в обрамляющем класе
+            public void print() {
+                System.out.print(message + Zebra.this.x);  // ссылка на 24
+            }
+        }
+        var s = new Stripes() {// локальная переменная
+        };
+        s.print();
+        return x;  // это не печатается
+    }
+
+    public static void main(String[] args) {
+        new Zebra().hunt();   // x is 24
+    }
+}
+
+
+
+
+
+
+
+
 
 
 
