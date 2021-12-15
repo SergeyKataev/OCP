@@ -1,9 +1,8 @@
 package Chapter3;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 import java.util.function.BiFunction;
 
 public class GenericsAndCollections {
@@ -594,22 +593,559 @@ class Duck implements Comparable<Duck> {
         Collections.sort(ducks); // sort by name
         System.out.println(ducks); // [Adolf, Puddles, Quack]
     }}
+    // Without implementing that interface, all we have is a method named compareTo(),
+// but it wouldn't be a Comparable object.
+
+/*
+We still need to know what the compareTo() method returns so that we can write our own. There are three
+rules to know.
+* The number 0 is returned when the current object is equivalent to the argument to compareTo().
+* A negative number (less than 0) is returned when the current object is smaller than the argument to
+compareTo().
+* A positive number (greater than 0) is returned when the current object is larger than the argument to
+compareTo().
+ */
+// Let's look at an implementation of compareTo() that compares numbers instead of String objects.
+class Animal implements Comparable<Animal> {
+private int id;
+public int compareTo(Animal a) {
+        return id - a.id; // sorts ascending by id
+        }
+    public static void main(String[] args) {
+        var a1 = new Animal();
+        var a2 = new Animal();
+        a1.id = 5;
+        a2.id = 7;
+        System.out.println(a1.compareTo(a2)); // -2
+        System.out.println(a1.compareTo(a1)); // 0
+        System.out.println(a2.compareTo(a1)); // 2
+} }
+
+// Casting the compareTo() Argument
+// When dealing with legacy code or code that does not use generics, the compareTo() method requires
+// a cast since it is passed an Object.
+
+class LegacyDuck implements Comparable {
+    private String name;
+    public int compareTo(Object obj) {
+        LegacyDuck d = (LegacyDuck) obj; // cast because no generics
+        return name.compareTo(d.name);
+    }
+}
+
+// Checking for null
+// When writing your own compare methods, you should check the data before
+//comparing it if is not validated ahead of time.
+
+class MissingDuck implements Comparable<MissingDuck> {
+    private String name;
+    public int compareTo(MissingDuck quack) {
+        if (quack == null)
+            throw new IllegalArgumentException("Poorly formed duck!");
+        if (this.name == null && quack.name == null)
+            return 0;
+        else if (this.name == null) return -1;
+        else if (quack.name == null) return 1;
+        else return name.compareTo(quack.name);
+    }
+}
+
+// Comparing Data with a Comparator
+// Sometimes you want to sort an object that did not implement Comparable, or you want to sort objects in
+//different ways at different times.
+
+
+// import java.util.Comparator; - компоратор в этом пакете
+// Comparable в java.lang (дефолтный пакет)
+
+class Duck2 implements Comparable<Duck2> {
+private String name;
+private int weight;
+
+    public Duck2(String name, int weight) {
+        this.name = name;
+        this.weight = weight;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
+    public String toString() { return name; }
+
+        public int compareTo(Duck2 d) {
+        return name.compareTo(d.name);
+        }
+
+        public static void main(String[] args) {
+        // Сomparator using an inner class.
+        Comparator<Duck2> byWeight = new Comparator<Duck2>() {
+        public int compare(Duck2 d1, Duck2 d2) {
+                return d1.getWeight()-d2.getWeight();
+        }
+        };
+        // Comparator is a functional interface since there is only one abstract method to implement.
+            // This means that we can rewrite the comparator on lines 18-22 using
+            // a lambda expression, as shown here:
+            // Comparator<Duck> byWeight = (d1, d2) -> d1.getWeight()-d2.getWeight();
+
+            // Alternatively, we can use a method reference and a helper method to specify we want to sort by weight.
+            // Comparator<Duck> byWeight = Comparator.comparing(Duck::getWeight);
+
+        var ducks = new ArrayList<Duck2>();
+        ducks.add(new Duck2("Quack", 7));
+        ducks.add(new Duck2("Puddles", 10));
+        Collections.sort(ducks);
+        System.out.println(ducks); // [Puddles, Quack]
+        Collections.sort(ducks, byWeight);
+        System.out.println(ducks); // [Quack, Puddles]
+        }
+}
+
+// Comparison of Comparable and Comparator
+/*
+Difference                      Comparable              Comparator
+Package name                    java.lang               java.util
+Interface must be               Yes                     No
+implemented by class
+comparing?
+Method name in interface        compareTo()             compare()
+Number of parameters            1                       2
+Common to declare using         No                      Yes
+a lambda
+ */
+
+//  Do you see why this one doesn't compile?
+    //var byWeight = new Comparator<Duck>() { // DOES NOT COMPILE
+    // public int compareTo(Duck d1, Duck d2) { // must implement a method named compare().
+    // return d1.getWeight()-d2.getWeight();
+    // }
+//};
+
+
+// Comparing Multiple Fields
+/*
+Suppose that we have a Squirrel class, as shown here: (2 поля)
+
+public class Squirrel {
+ private int weight;
+ private String species;
+ // Assume getters/setters/constructors provided
+}
+
+We want to write a Comparator to sort by species name. If two squirrels are from the same species, we
+want to sort the one that weighs the least first. We could do this with code that looks like this:
+
+Comparator<Squirrel> c = Comparator.comparing(Squirrel::getSpecies)
+ .thenComparingInt(Squirrel::getWeight);
+
+ Suppose we want to sort in descending order by species.
+ var c = Comparator.comparing(Squirrel::getSpecies).reversed();
+
+
+ */
+
+/*
+Helper static methods for building a Comparator
+
+Method                          Description
+comparing(function)           : Compare by the results of a function that returns any Object (or object
+                              : autoboxed into an Object).
+comparingDouble(function)     : Compare by the results of a function that returns a double.
+comparingInt(function)        : Compare by the results of a function that returns an int.
+comparingLong(function)       : Compare by the results of a function that returns a long.
+naturalOrder()                : Sort using the order specified by the Comparable
+                                implementation on the object itself.
+reverseOrder()                : Sort using the reverse of the order specified by the Comparable
+                                implementation on the object itself.
+ */
+
+/*
+Helper default methods for building a Comparator
+
+Method                            Description
+reversed()                      : Reverse the order of the chained Comparator.
+thenComparing(function)         : If the previous Comparator returns 0, use this comparator that returns
+                                  an Object or can be autoboxed into one.
+thenComparingDouble(function)   : If the previous Comparator returns 0, use this comparator that returns
+                                  a double. Otherwise, return the value from the previous Comparator.
+thenComparingInt(function)      : If the previous Comparator returns 0, use this comparator that returns
+                                  an int. Otherwise, return the value from the previous Comparator.
+thenComparingLong(function)     : If the previous Comparator returns 0, use this comparator that returns
+                                  a long. Otherwise, return the value from the previous Comparator.
+ */
 
 
 
 
+// Sorting and Searching
+/*
+public class SortRabbits {
+    static class Rabbit{ int id; }
+    public static void main(String[] args) {
+    List<Rabbit> rabbits = new ArrayList<>();
+    rabbits.add(new Rabbit());
+    Collections.sort(rabbits); // DOES NOT COMPILE
+} }
+
+Java knows that the Rabbit class is not Comparable. It knows sorting will fail, so it doesn't even let the
+code compile. You can fix this by passing a Comparator to sort().
+
+public class SortRabbits {
+static class Rabbit{ int id; }
+public static void main(String[] args) {
+List<Rabbit> rabbits = new ArrayList<>();
+rabbits.add(new Rabbit());
+Comparator<Rabbit> c = (r1, r2) -> r1.id - r2.id;
+Collections.sort(rabbits, c);
+} }
+ */
+
+// Reviewing binarySearch() - requests a binary search in !!!descending order
+//The binarySearch() method requires a sorted List.
+
+// 11: List<Integer> list = Arrays.asList(6,9,1,8);
+// 12: Collections.sort(list); // [1, 6, 8, 9]
+// 13: System.out.println(Collections.binarySearch(list, 6)); // 1
+// 14: System.out.println(Collections.binarySearch(list, 3)); // -2
 
 
+/*
+Going back to our Rabbit that does not implement Comparable, we try to add it to a TreeSet.
+public class UseTreeSet {
+static class Rabbit{ int id; }
+public static void main(String[] args) {
+Set<Duck> ducks = new TreeSet<>();
+ducks.add(new Duck("Puddles"));
+
+Set<Rabbit> rabbits = new TreeSet<>();
+rabbits.add(new Rabbit()); // ClassCastException
+} }
+
+// в TreeSet нужно вставлять компоратор
+
+Set<Rabbit> rabbits = new TreeSet<>((r1, r2) -> r1.id-r2.id);
+rabbits.add(new Rabbit());
+ */
 
 
+// Working with Generics
+// Well, remember when we said that we had to hope the
+//caller didn't put something in the list that we didn't expect? The following does just that:
+/*
+static void printNames(List list) {
+    for (int i = 0; i < list.size(); i++) {
+    String name = (String) list.get(i); // ClassCastException - ошибка StringBuilder -> String
+                            // that java.lang .StringBuilder cannot be cast to java.lang.String.
+    System.out.println(name);
+    }
+}
+public static void main(String[] args) {
+    List names = new ArrayList();
+    names.add(new StringBuilder("Webby")); // добавить можно что угодно
+    printNames(names);
+}
+ */
+
+// Generic Classes
+
+/*
+
+For example, the following class named Crate has a generic type
+variable declared after the name of the class.
+
+public class Crate<T> {
+    private T contents;
+    public T emptyCrate() {
+        return contents;
+     }
+ public void packCrate(T contents) {
+ this.contents = contents;
+ }
+}
+ */
 
 
+/*
+Naming Conventions for Generics
+A type parameter can be named anything you want. The convention is to use single uppercase letters
+to make it obvious that they aren't real class names. The following are common letters to use:
+E for an element
+K for a map key
+V for a map value
+N for a number
+T for a generic data type
+S, U, V, and so forth for multiple generic types
+ */
 
 
+/* пример использования дженерика
+Elephant elephant = new Elephant();
+Crate<Elephant> crateForElephant = new Crate<>();
+crateForElephant.packCrate(elephant);
+Elephant inNewHome = crateForElephant.emptyCrate();
+ */
 
 
+// Generic classes aren't limited to having a single type parameter. This class shows two generic parameters.
+class SizeLimitedCrate<T, U> {
+    private T contents;
+    private U sizeLimit;
+    public SizeLimitedCrate(T contents, U sizeLimit) {
+        this.contents = contents;
+        this.sizeLimit = sizeLimit;
+    } }
 
 
+    // Generic Interfaces
+    interface Shippable<T> {
+        void ship(T t);
+    }
+
+    // There are three ways a class can approach implementing this interface.
+// The first is to specify the generic type in the class.
+    class ShippableRobotCrate implements Shippable<Robot> {
+        public void ship(Robot t) { }
+    }
+
+// The next way is to create a generic class.
+class ShippableAbstractCrate<U> implements Shippable<U> {
+    public void ship(U t) { }
+}
+
+// The final way is to not use generics at all.
+class ShippableCrate implements Shippable {
+    public void ship(Object t) { }
+}
+
+// Generic Methods
+// In this example, both methods use a generic parameter:
+/*
+public class Handler {
+     public static <T> void prepare(T t) {
+         System.out.println("Preparing " + t);
+         }
+         public static <T> Crate<T> ship(T t) {
+         System.out.println("Shipping " + t);
+         return new Crate<T>();
+     }
+}
+
+// Before the return type, we declare the formal type parameter of <T>. In the ship() method,
+// we show how you can use the generic parameter in the return type, Crate<T>, for the method.
+
+2: public class More {
+3: public static <T> void sink(T t) { } - formal parameter type immediately before the return type of void.
+4: public static <T> T identity(T t) { return t; } - shows the return type being the formal parameter type.
+5: public static T noGood(T t) { return t; } // DOES NOT COMPILE - omits the formal parameter type
+6: }
+ */
+
+// криво, но так можно
+// Box.<String>ship("package");
+// Box.<String[]>ship(args);
+
+
+/*
+// When you have a method declare a generic parameter type, it is independent of the class generics.
+// Take a look at this class that declares a generic T at both levels:
+
+1: public class Crate<T> {   - T is Robot because that is what gets referenced when constructing a Crate
+2:   public <T> T tricky(T t) { - T is String because that is what is passed to the method.
+3:     return t;
+4:   }
+5: }
+
+See if you can figure out the type of T on lines 1 and 2 when we call the code as follows:
+
+10: public static String createName() {
+11:     Crate<Robot> crate = new Crate<>();
+12:     return crate.tricky("bot");
+13: }
+
+ */
+// Bounding Generic Types
+// Types of bounds
+/*
+Type of bound                   Syntax                  Example
+Unbounded wildcard              ?                       List<?> a = new ArrayList<String>();
+Wildcard with an upper bound    ? extends type          List<? extends Exception> a = new
+                                                        ArrayList<RuntimeException>();
+Wildcard with a lower bound     ? super type            List<? super Exception> a = new ArrayList<Object>();
+ */
+
+// Unbounded Wildcards - represents any data type.
+// Let's suppose that we want to write a method that looks through a list of any type.
+
+/*
+
+public static void printList(List<Object> list) {
+    for (Object x: list)
+        System.out.println(x);
+    }
+public static void main(String[] args) {
+    List<String> keywords = new ArrayList<>();
+    keywords.add("java");
+    printList(keywords); // DOES NOT COMPILE
+}
+
+// так ок
+public static void printList(List<?> list) {
+for (Object x: list)
+ System.out.println(x);
+}
+public static void main(String[] args) {
+ List<String> keywords = new ArrayList<>();
+ keywords.add("java");
+ printList(keywords);
+}
+
+
+// еще пример
+4: List<Integer> numbers = new ArrayList<>();
+5: numbers.add(new Integer(42));
+6: List<Object> objects = numbers; // DOES NOT COMPILE
+7: objects.add("forty two");
+8: System.out.println(numbers.get(1));
+
+
+// Finally, let's look at the impact of var. Do you think these two statements are equivalent?
+
+//  List<?> x1 = new ArrayList<>();
+//  var x2 = new ArrayList<>();
+
+// They are not. There are two key differences. First, x1 is of type List, while x2 is of type ArrayList.
+ */
+
+// Upper-Bounded Wildcards
+// We've established that a generic type can't just use a subclass.
+// ArrayList<Number> list = new ArrayList<Integer>(); // DOES NOT COMPILE
+//Instead, we need to use a wildcard.
+//List<? extends Number> list = new ArrayList<Integer>();
+
+// The upper-bounded wildcard says that any class that extends Number or Number itself can be used as the
+//formal parameter type:
+/*
+public static long total(List<? extends Number> list) {
+ long count = 0;
+ for (Number number: list)
+ count += number.longValue();
+ return count;
+}
+ */
+
+// Lower-Bounded Wildcards
+// Let's try to write a method that adds a string “quack” to two lists.
+/*
+List<String> strings = new ArrayList<String>();
+strings.add("tweet");
+List<Object> objects = new ArrayList<Object>(strings);
+addSound(strings);
+addSound(objects);
+
+// The problem is that we want to pass a List<String> and a List<Object> to the same method.
+
+не забудь, что метод addSound не может быть unbounded или upper-bounded, т.к. они неизменяемые
+
+
+// To solve this problem, we need to use a lower bound.
+
+public static void addSound(List<? super String> list) {
+ list.add("quack");
+}
+
+// With a lower bound, we are telling Java that the list will be a list of String objects or a list of some objects
+//that are a superclass of String.
+
+ */
+
+// Understand Generic Supertypes
+// When you have subclasses and superclasses, lower bounds can get tricky.
+
+// 3: List<? super IOException> exceptions = new ArrayList<Exception>();
+// 4: exceptions.add(new Exception()); // DOES NOT COMPILE
+// 5: exceptions.add(new IOException());
+// 6: exceptions.add(new FileNotFoundException());
+
+// Line 3 references a List that could be List<IOException> or List<Exception> or List<Object>.
+// Line 4 does not compile because we could have a List<IOException> and an Exception object
+// wouldn't fit in there.
+// Line 5 is fine. IOException can be added to any of those types. Line 6 is also fine.
+
+// Putting It All Together
+// Combining Generic Declarations
+// Let's try an example. First, we declare three classes that the example will use.
+
+class A {}
+class B extends A {}
+class C extends B {}
+
+//Ready? Can you figure out why these do or don't compile? Also, try to figure out what they do.
+
+class GenEx1 {
+    public static void main(String[] args) {
+        List<?> list1 = new ArrayList<A>();
+        List<? extends A> list2 = new ArrayList<A>(); // You can have ArrayList<A>,
+                                    // ArrayList<B>, or ArrayList<C> stored in that reference
+        List<? super A> list3 = new ArrayList<A>();
+    }
+    // Did you get those right? Let's try a few more.
+//    List<? extends B> list4 = new ArrayList<A>(); // DOES NOT COMPILE - все потомки B (B,C можно)
+    List<? super B> list5 = new ArrayList<A>();  // все родители B (A,B можно)
+//    List<?> list6 = new ArrayList<? extends A>(); // DOES NOT COMPILE - так нельзя
+}
+
+// Passing Generic Arguments
+/*
+<T> T first(List<? extends T> list) {
+ return list.get(0);
+} // It takes a parameter of List<T>, or some subclass of T, and it returns a single object of that T type.
+
+// так будет ошибка
+<T> <? extends T> second(List<? extends T> list) { // DOES NOT COMPILE
+ return list.get(0); //  return type isn't actually a type.
+}
+ */
+
+/*
+Now be careful—this one is extra tricky:
+<B extends A> B third(List<B> list) {
+ return new B(); // DOES NOT COMPILE
+}
+
+This method, third(), does not compile. <B extends A> says that you want to use B as a type parameter
+just for this method and that it needs to extend the A class. Coincidentally, B is also the name of a class. It
+isn't a coincidence. It's an evil trick. Within the scope of the method, B can represent class A, B, or C,
+because all extend the A class. Since B no longer refers to the B class in the method, you can't instantiate it.
+ */
+
+/*
+After that, it would be nice to get something straightforward.
+
+void fourth(List<? super B> list) {}
+
+We finally get a method, fourth(), which is a normal use of generics. You can pass the types List<B>,
+List<A>, or List<Object>.
+
+Finally, can you figure out why this example does not compile?
+
+<X> void fifth(List<X super B> list) { // DOES NOT COMPILE
+}
+This last method, fifth(), does not compile because it tries to mix a method-specific type parameter with
+a wildcard. A wildcard must have a ? in it. 
+ */
 
 
 
