@@ -9,28 +9,29 @@ public class GenericsAndCollections {
 }
 
 // Using Method References
+// 1. Есть функциональный интерфейс
 @FunctionalInterface
 interface LearnToSpeak {
     void speak(String sound);
 }
 
+// 2. есть класс хелпер, который принимает параметр интерфейс
 class DuckHelper {
     public static void teacher(String name, LearnToSpeak trainer) {
-
         // exercise patience
         trainer.speak(name);
     }
 }
-
+// 3. класс, который реализует класс хелпер
 class Duckling {
     public static void makeSound(String sound) {
-        LearnToSpeak learner = s -> System.out.println(s);
-        DuckHelper.teacher(sound, learner);
+        LearnToSpeak learner = s -> System.out.println(s);  // поместили лямбду в функциональный интерфейс
+        DuckHelper.teacher(sound, learner); // передаем строку и лямбду (правила игры)
     }
 }
 
 // A method reference lets us remove that redundancy and instead write this:
-// LearnToSpeak learner = System.out::println;
+// LearnToSpeak learner = System.out::println; - аналог лямбды
 
 // Remember that :: is like a lambda, and it is used for deferred execution with a
 // functional interface.
@@ -41,7 +42,7 @@ class Duckling {
 // * Instance methods on a parameter to be determined at runtime
 // * Constructors
 
-
+// Ниже про каждый из 4х форматов
 /*
 ****
 Calling Static Methods
@@ -91,9 +92,10 @@ It is common for a constructor reference to use a Supplier as shown here:
 
  */
 
+
 // Reviewing Method References
 /*
-Type : Example
+Type                                      -  Example
 Static methods                            - Collections::sort
 Instance methods on a particular object   - str::startsWith
 Instance methods on a parameter           - String::isEmpty
@@ -101,15 +103,14 @@ Constructor                               - ArrayList::new
  */
 
 // Using Wrapper Classes
-// There are two tricks in the space of autoboxing and unboxing. The first has to do with null values. This
-// innocuous-looking code throws an exception:
+// There are two tricks in the space of autoboxing and unboxing.
+// The first has to do with null values. This innocuous-looking code throws an exception:
 
 // 15: var heights = new ArrayList<Integer>();
 // 16: heights.add(null); - legal because a null reference can be assigned to any reference variable.
 // 17: int h = heights.get(0); // NullPointerException - we try to unbox that null to an int primitive.
 
 // Speaking of null, one advantage of a wrapper class over a primitive is that it can hold a null value.
-
 // Also, be careful when autoboxing into Integer. What do you think this code outputs?
 
 // 23: List<Integer> numbers = new ArrayList<Integer>();
@@ -158,8 +159,8 @@ Constructor                               - ArrayList::new
 //   a map are key/value pairs.
 
 // Common Collections Methods
-// add() - boolean add(E element)
 
+// add() - boolean add(E element)
 // 3: Collection<String> list = new ArrayList<>();
 // 4: System.out.println(list.add("Sparrow")); // true
 // 5: System.out.println(list.add("Sparrow")); // true
@@ -229,7 +230,6 @@ Constructor                               - ArrayList::new
 //8: list.removeIf(s -> s.startsWith("A"));
 //9: System.out.println(list); // [Magician]
 
-
 // Let's try one more example that does use a method reference.
 // 11: Collection<String> set = new HashSet<>();
 // 12: set.add("Wand");
@@ -237,13 +237,10 @@ Constructor                               - ArrayList::new
 // 14: set.removeIf(String::isEmpty); // s -> s.isEmpty()
 // 15: System.out.println(set); // [Wand]
 
-
 // forEach()  - void forEach(Consumer<? super T> action)
 // Collection<String> cats = Arrays.asList("Annie", "Ripley");
 // cats.forEach(System.out::println);
 // cats.forEach(c -> System.out.println(c));
-
-
 
 // Using the List Interface
 
@@ -254,8 +251,6 @@ Arrays.asList(varargs) - Returns fixed size list backed by an array (Нельз�
 List.of(varargs) - Returns immutable list  (нельзя добавлять, удалять, replace)
 List.copyOf(collection) - Returns immutable list with copy of
     original collection's values  (нельзя добавлять, удалять, replace)
-
-
 
 Let's take a look at an example of these three methods.
 16: String[] array = new String[] {"a", "b", "c"};
@@ -335,6 +330,7 @@ exception. The next() method actually moves the Iterator to the next element.
 // Like List, you can create an immutable Set in one line or make a copy of an existing one.
 //Set<Character> letters = Set.of('z', 'o', 'o');
 //Set<Character> copy = Set.copyOf(letters);
+
 /*
 You also have to know the differences between the types of sets. Let's start with HashSet:
 
@@ -352,7 +348,7 @@ This code prints three lines:
 
 
 // Now let's look at the same example with TreeSet.
-3: Set<Integer> set = new TreeSet<>();
+3: Set<Integer> set = new TreeSet<>();   // TreeSet сортирует
 4: boolean b1 = set.add(66); // true
 5: boolean b2 = set.add(10); // true
 6: boolean b3 = set.add(66); // false
@@ -368,10 +364,8 @@ This time, the code prints the following:
 // Numbers implement the Comparable interface in Java, which is used for sorting.
 
  */
-
 // Using the Queue Interface
 // Working with Queue Methods
-
 
 //boolean add(E e) - Вставляет элемент в Queue. Если больше нет места для вставки, этот метод создает исключение.
 //                   Метод возвращает true, если вставка выполнена успешно.
@@ -396,7 +390,6 @@ This time, the code prints the following:
 // 17: System.out.println(queue.poll()); // 4
 // 18: System.out.println(queue.peek()); // null
 
-
 // Using the Map Interface
 // Map.of() and Map.copyOf()
 // Map.of("key1", "value1", "key2", "value2");
@@ -406,8 +399,6 @@ This time, the code prints the following:
 // Map.entry("key1", "value1"),
 // Map.entry("key1", "value1")
 // );
-
-
 
 // TreeMap – хранит элементы в порядке сортировки
 // Класс LinkedHashMap расширяет HashMap. Он создает связный список элементов в карте,
@@ -513,7 +504,6 @@ Collection<V> values()                  : Returns Collection of all values.
 // 26: map.replaceAll((k, v) -> k + v); // sets the value of each element of the map to the result of that function
 // 27: System.out.println(map); // {1=3, 2=12}
 
-
 // putIfAbsent()
 // - The putIfAbsent() method sets a value in the map but skips it if the value
 // is already set to a non- null value.
@@ -570,10 +560,10 @@ TreeSet     Set                                     Yes         No              
     public interface Comparable<T> {
      int compareTo(T o);
     }
- */
+*/
 
 
-// пример с компоратором
+// пример с Comparable
 class Duck implements Comparable<Duck> {
     private String name;
     public Duck(String name) {
@@ -625,9 +615,9 @@ public int compareTo(Animal a) {
 // When dealing with legacy code or code that does not use generics, the compareTo() method requires
 // a cast since it is passed an Object.
 
-class LegacyDuck implements Comparable {
+class LegacyDuck implements Comparable {  // тут нет дженерика
     private String name;
-    public int compareTo(Object obj) {
+    public int compareTo(Object obj) {  // поэтому тут Object
         LegacyDuck d = (LegacyDuck) obj; // cast because no generics
         return name.compareTo(d.name);
     }
@@ -655,7 +645,7 @@ class MissingDuck implements Comparable<MissingDuck> {
 //different ways at different times.
 
 
-// import java.util.Comparator; - компоратор в этом пакете
+// import java.util.Comparator; - компоратор в этом (не дефолтном) пакете
 // Comparable в java.lang (дефолтный пакет)
 
 class Duck2 implements Comparable<Duck2> {
@@ -692,7 +682,7 @@ private int weight;
         public static void main(String[] args) {
         // Сomparator using an inner class.
         Comparator<Duck2> byWeight = new Comparator<Duck2>() {
-        public int compare(Duck2 d1, Duck2 d2) {
+        public int compare(Duck2 d1, Duck2 d2) {  // тут метод compare
                 return d1.getWeight()-d2.getWeight();
         }
         };
@@ -709,7 +699,7 @@ private int weight;
         ducks.add(new Duck2("Puddles", 10));
         Collections.sort(ducks);
         System.out.println(ducks); // [Puddles, Quack]
-        Collections.sort(ducks, byWeight);
+        Collections.sort(ducks, byWeight);  // в sort вторым параметром - компоратор
         System.out.println(ducks); // [Quack, Puddles]
         }
 }
@@ -758,7 +748,7 @@ Comparator<Squirrel> c = Comparator.comparing(Squirrel::getSpecies)
  */
 
 /*
-Helper static methods for building a Comparator
+Helper static! methods for building a Comparator
 
 Method                          Description
 comparing(function)           : Compare by the results of a function that returns any Object (or object
@@ -770,12 +760,14 @@ naturalOrder()                : Sort using the order specified by the Comparable
                                 implementation on the object itself.
 reverseOrder()                : Sort using the reverse of the order specified by the Comparable
                                 implementation on the object itself.
+                                Comparator<MyObject> myComparator = Collections.reverseOrder();
  */
 
 /*
 Helper default methods for building a Comparator
 
 Method                            Description
+
 reversed()                      : Reverse the order of the chained Comparator.
 thenComparing(function)         : If the previous Comparator returns 0, use this comparator that returns
                                   an Object or can be autoboxed into one.
@@ -843,7 +835,7 @@ rabbits.add(new Rabbit());
 
 // Working with Generics
 // Well, remember when we said that we had to hope the
-//caller didn't put something in the list that we didn't expect? The following does just that:
+// caller didn't put something in the list that we didn't expect? The following does just that:
 /*
 static void printNames(List list) {
     for (int i = 0; i < list.size(); i++) {
@@ -961,21 +953,28 @@ public class Handler {
 /*
 // When you have a method declare a generic parameter type, it is independent of the class generics.
 // Take a look at this class that declares a generic T at both levels:
+*/
 
-1: public class Crate<T> {   - T is Robot because that is what gets referenced when constructing a Crate
-2:   public <T> T tricky(T t) { - T is String because that is what is passed to the method.
-3:     return t;
-4:   }
-5: }
-
+class Crate<T> {   // - T is Robot because that is what gets referenced when constructing a Crate
+   public <T> T tricky(T t) { // - T is String because that is what is passed to the method.
+     return t;
+   }
+ }
+/*
 See if you can figure out the type of T on lines 1 and 2 when we call the code as follows:
+*/
 
-10: public static String createName() {
-11:     Crate<Robot> crate = new Crate<>();
-12:     return crate.tricky("bot");
-13: }
+class TestG1 {
+    public static void main(String[] args) {
+        System.out.println(createName());
+    }
 
- */
+    public static String createName() {
+        Crate<Robot> crate = new Crate<>();
+        return crate.tricky("bot");
+    }
+}
+
 // Bounding Generic Types
 // Types of bounds
 /*
@@ -1075,7 +1074,7 @@ public static void addSound(List<? super String> list) {
 // When you have subclasses and superclasses, lower bounds can get tricky.
 
 // 3: List<? super IOException> exceptions = new ArrayList<Exception>();
-// 4: exceptions.add(new Exception()); // DOES NOT COMPILE
+// 4: exceptions.add(new Exception()); // DOES NOT COMPILE Exception родитель IOException
 // 5: exceptions.add(new IOException());
 // 6: exceptions.add(new FileNotFoundException());
 
@@ -1144,11 +1143,40 @@ Finally, can you figure out why this example does not compile?
 <X> void fifth(List<X super B> list) { // DOES NOT COMPILE
 }
 This last method, fifth(), does not compile because it tries to mix a method-specific type parameter with
-a wildcard. A wildcard must have a ? in it. 
+a wildcard. A wildcard must have a ? in it.
  */
 
 
+// merge
+class MergeEx{
+    public static void main(String[] args) {
+        Map<String, String> map = new HashMap<>();
+        map.put("ID123", "Joe");
+        System.out.println(map);
+        String merge = map.merge("ID123", "addSome", (x, y) -> x + y);
+        System.out.println(merge);  // JoeaddSome
 
+        // Если такое значение отсутсвует, то просто добавиться пара в мапу
+        map.merge("ID124", "Sasha", (x, y) -> x + y); // {ID123=JoeaddSome, ID124=Sasha}
+        System.out.println(map);
+
+        // если лямбда - null - будет удаление по ключу
+        map.merge("ID124", "Sasha", (x, y) -> null);
+        System.out.println(map);   // {ID123=JoeaddSome}
+
+        map.merge(null, "Sasha", (x, y) -> null); // так можно
+        System.out.println("key - null " + map);
+
+        map.merge("ID124", null, (x, y) -> null); // так будет рантайм ошибка, map нельзя null
+        System.out.println("value - null " + map);
+
+        map.merge("ID124", "ID124", null);  // так нельзя NPE
+
+        map.merge("ID124", "ID124", (x, y) -> map.put("1","2")); // не отработает, просто добавит "ID124"
+        map.merge("ID124", "ID124", (x, y) -> map.put("1","2")); // вторая строка уже сломает
+        // мы найдем "ID124" и попытаемся вставить в мапу налету, будет ошибка конкаренси
+    }
+}
 
 
 
