@@ -363,6 +363,238 @@ System.out.println(opt.orElseThrow());
 It prints out 95.0 three times. Since the value does exist, there is no need to use the “or else” logic.
  */
 
+// Using Streams
+// In Java, the streams we have been talking about are represented by the Stream<T> interface,
+// defined in the java.util.stream package.
+// Creating Finite Streams
+//For simplicity, we'll start with finite streams. There are a few ways to create them.
+/*
+11: Stream<String> empty = Stream.empty(); // count = 0
+12: Stream<Integer> singleElement = Stream.of(1); // count = 1
+13: Stream<Integer> fromArray = Stream.of(1, 2, 3); // count = 3
+
+Java also provides a convenient way of converting a Collection to a stream.
+14: var list = List.of("a", "b", "c");
+15: Stream<String> fromList = list.stream();
+
+Creating Infinite Streams
+So far, this isn't particularly impressive. We could do all this with lists. We can't create an infinite list,
+though, which makes streams more powerful.
+17: Stream<Double> randoms = Stream.generate(Math::random);
+18: Stream<Integer> oddNumbers = Stream.iterate(1, n -> n + 2);
+
+What if you wanted just odd numbers less than 100? Java 9 introduced an overloaded version of
+iterate() that helps with just that.
+
+19: Stream<Integer> oddNumberUnder100 = Stream.iterate(
+20: 1, // seed
+21: n -> n < 100, // Predicate to specify when done
+22: n -> n + 2); // UnaryOperator to get next value
+
+
+Reviewing Stream Creation Methods
+These are the ways of creating a source for streams, given a Collection instance coll.
+
+Method                            Finite        Notes
+                                  or
+                                  infinite?
+
+Stream.empty()                    Finite        Creates Stream with zero elements
+
+Stream.of(varargs)                Finite        Creates Stream with elements listed
+
+coll.stream()                     Finite        Creates Stream from a Collection
+
+coll.parallelStream()             Finite        Creates Stream from a Collection
+                                                where the stream can run in parallel
+
+Stream.generate(supplier)         Infinite      Creates Stream by calling the Supplier
+                                                for each element upon request
+
+Stream.iterate(seed,              Infinite      Creates Stream by using the seed for the
+unaryOperator)                                  first element and then calling the
+                                                UnaryOperator for each subsequent element upon request
+
+Stream.iterate(seed,              Finite or     Creates Stream by using the seed for the first
+predicate, unaryOperator)         infinite      element and then calling the UnaryOperator for
+                                                each subsequent element upon request.
+                                                Stops if the Predicate returns false.
+
+
+
+Using Common Terminal Operations
+
+Terminal stream operations
+Method              What happens for infinite streams           Return value        Reduction
+
+count()             Does not terminate                          long                Yes
+
+min()               Does not terminate                          Optional<T>         Yes
+max()
+
+findAny()           Terminates                                  Optional<T>         No
+findFirst()
+
+allMatch()          Sometimes terminates                        boolean             No
+anyMatch()
+noneMatch()
+
+forEach()           Does not terminate                          void                No
+
+reduce()            Does not terminate                          Varies              Yes
+
+collect()           Does not terminate                          Varies              Yes
+
+
+count() - long count()
+This example shows calling count() on a finite stream:
+
+Stream<String> s = Stream.of("monkey", "gorilla", "bonobo");
+System.out.println(s.count()); // 3
+
+
+min() and max()
+The min() and max() methods allow you to pass a custom comparator and find the smallest or largest
+value in a finite stream according to that sort order.
+
+signature:
+Optional<T> min(Comparator<? super T> comparator)
+Optional<T> max(Comparator<? super T> comparator)
+
+This example finds the animal with the fewest letters in its name:
+
+Stream<String> s = Stream.of("monkey", "ape", "bonobo");
+Optional<String> min = s.min((s1, s2) -> s1.length()-s2.length());
+min.ifPresent(System.out::println); // ape
+
+
+// Если пустой стрим
+Optional<?> minEmpty = Stream.empty().min((s1, s2) -> 0);
+System.out.println(minEmpty.isPresent()); // false
+
+
+findAny() and findFirst()
+signature:
+Optional<T> findAny()
+Optional<T> findFirst()
+
+This example finds an animal:
+Stream<String> s = Stream.of("monkey", "gorilla", "bonobo");
+Stream<String> infinite = Stream.generate(() -> "chimp");
+s.findAny().ifPresent(System.out::println); // monkey (usually)
+infinite.findAny().ifPresent(System.out::println); // chimp
+
+
+
+allMatch(), anyMatch(), and noneMatch()
+The method signatures are as follows:
+boolean anyMatch(Predicate <? super T> predicate)
+boolean allMatch(Predicate <? super T> predicate)
+boolean noneMatch(Predicate <? super T> predicate)
+
+This example checks whether animal names begin with letters:
+var list = List.of("monkey", "2", "chimp");
+Stream<String> infinite = Stream.generate(() -> "chimp");
+Predicate<String> pred = x -> Character.isLetter(x.charAt(0));
+System.out.println(list.stream().anyMatch(pred)); // true
+System.out.println(list.stream().allMatch(pred)); // false
+System.out.println(list.stream().noneMatch(pred)); // false
+System.out.println(infinite.anyMatch(pred)); // true
+        If we called allMatch(), it would run until we killed the program.
+
+
+Remember that allMatch(), anyMatch(), and noneMatch() return a boolean. By
+contrast, the find methods return an Optional because they return an element of the stream.
+
+
+
+forEach()
+signature - void forEach(Consumer<? super T> action)
+
+Пример
+Stream<String> s = Stream.of("Monkey", "Gorilla", "Bonobo");
+s.forEach(System.out::print); // MonkeyGorillaBonobo
+
+Remember that you can call forEach() directly on a Collection or on a
+Stream. Don't get confused on the exam when you see both approaches.
+
+Notice that you can't use a traditional for loop on a stream.
+Stream<Integer> s = Stream.of(1);
+for (Integer i : s) {} // DOES NOT COMPILE
+
+
+
+reduce()
+The reduce() method combines a stream into a single object. It is a reduction, which means it processes
+all elements. The three method signatures are these:
+
+1) T reduce(T identity, BinaryOperator<T> accumulator)
+
+2) Optional<T> reduce(BinaryOperator<T> accumulator)
+
+3) <U> U reduce(U identity,
+ BiFunction<U,? super T,U> accumulator,
+ BinaryOperator<U> combiner)
+
+
+Think about how you would concatenate an array of String
+objects into a single String without functional programming. It might look something like this:
+var array = new String[] { "w", "o", "l", "f" };
+var result = "";
+for (var s: array) result = result + s;
+System.out.println(result); // wolf
+
+
+The identity is the initial value of the reduction, in this case an empty String. The accumulator combines
+the current result with the current value in the stream. With lambdas, we can do the same thing with a
+stream and reduction:
+Stream<String> stream = Stream.of("w", "o", "l", "f");
+String word = stream.reduce("", (s, c) -> s + c);
+System.out.println(word); // wolf
+
+We can even rewrite this with a method reference.
+Stream<String> stream = Stream.of("w", "o", "l", "f");
+String word = stream.reduce("", String::concat);
+System.out.println(word); // wolf
+
+Can you write a reduction to multiply all of the Integer objects in a stream? Try it.
+Our solution is shown here:
+Stream<Integer> stream = Stream.of(3, 5, 6);
+System.out.println(stream.reduce(1, (a, b) -> a*b)); // 90
+
+
+2) Optional<T> reduce(BinaryOperator<T> accumulator)
+In many cases, the identity isn't really
+necessary, so Java lets us omit it. When you don't specify an identity, an Optional is returned because
+there might not be any data. There are three choices for what is in the Optional.
+* If the stream is empty, an empty Optional is returned.
+* If the stream has one element, it is returned.
+* If the stream has multiple elements, the accumulator is applied to combine them.
+
+The following illustrates each of these scenarios:
+BinaryOperator<Integer> op = (a, b) -> a * b;
+Stream<Integer> empty = Stream.empty();
+Stream<Integer> oneElement = Stream.of(3);
+Stream<Integer> threeElements = Stream.of(3, 5, 6);
+empty.reduce(op).ifPresent(System.out::println); // no output
+oneElement.reduce(op).ifPresent(System.out::println); // 3
+threeElements.reduce(op).ifPresent(System.out::println); // 90
+
+
+3) <U> U reduce(U identity,
+ BiFunction<U,? super T,U> accumulator,
+ BinaryOperator<U> combiner)
+The third method signature is used when we are dealing with different types. It allows Java to create
+intermediate reductions and then combine them at the end. Let's take a look at an example that counts the
+number of characters in each String:
+
+Stream<String> stream = Stream.of("w", "o", "l", "f!");
+int length = stream.reduce(0, (i, s) -> i+s.length(), (a, b) -> a+b);
+System.out.println(length); // 5
+
+The first parameter (0) is the value for the initializer. If we had an empty stream, this would be the answer.
+ */
+
 
 
 
