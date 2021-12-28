@@ -1,5 +1,9 @@
 package Chapter4;
 
+import java.util.OptionalInt;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 public class FunctionalProgramming {
 }
 
@@ -421,7 +425,6 @@ predicate, unaryOperator)         infinite      element and then calling the Una
                                                 Stops if the Predicate returns false.
 
 
-
 Using Common Terminal Operations
 
 Terminal stream operations
@@ -467,11 +470,9 @@ Stream<String> s = Stream.of("monkey", "ape", "bonobo");
 Optional<String> min = s.min((s1, s2) -> s1.length()-s2.length());
 min.ifPresent(System.out::println); // ape
 
-
 // Если пустой стрим
 Optional<?> minEmpty = Stream.empty().min((s1, s2) -> 0);
 System.out.println(minEmpty.isPresent()); // false
-
 
 findAny() and findFirst()
 signature:
@@ -481,9 +482,8 @@ Optional<T> findFirst()
 This example finds an animal:
 Stream<String> s = Stream.of("monkey", "gorilla", "bonobo");
 Stream<String> infinite = Stream.generate(() -> "chimp");
-s.findAny().ifPresent(System.out::println); // monkey (usually)
+s.findAny().ifPresent(System.out::println); // monkey
 infinite.findAny().ifPresent(System.out::println); // chimp
-
 
 
 allMatch(), anyMatch(), and noneMatch()
@@ -594,6 +594,458 @@ System.out.println(length); // 5
 
 The first parameter (0) is the value for the initializer. If we had an empty stream, this would be the answer.
  */
+
+/*
+collect()
+it lets us get data out of streams and into another form.
+
+Stream<String> stream = Stream.of("w", "o", "l", "f");
+StringBuilder word = stream.collect(
+ StringBuilder::new,
+ StringBuilder::append,
+ StringBuilder::append)
+System.out.println(word); // wolf
+
+The first parameter is the supplier, which creates the object that will store the results as we collect data.
+The second parameter is the accumulator, which is a BiConsumer that takes two parameters and doesn't
+return anything.  It is responsible for adding one more element to the data collection. In this example, it
+appends the next String to the StringBuilder. The final parameter is the combiner, which is another BiConsumer.
+It is responsible for taking two data collections and merging them.
+
+
+еще пример
+Stream<String> stream = Stream.of("w", "o", "l", "f");
+TreeSet<String> set = stream.collect(
+ TreeSet::new,
+ TreeSet::add,
+ TreeSet::addAll);
+System.out.println(set); // [f, l, o, w]
+
+ или так
+
+Stream<String> stream = Stream.of("w", "o", "l", "f");
+TreeSet<String> set =
+ stream.collect(Collectors.toCollection(TreeSet::new));
+System.out.println(set); // [f, l, o, w]
+
+If we didn't need the set to be sorted, we could make the code even shorter:
+Stream<String> stream = Stream.of("w", "o", "l", "f");
+Set<String> set = stream.collect(Collectors.toSet());
+System.out.println(set); // [f, w, l, o]
+
+
+Using Common Intermediate Operations
+
+filter()
+signature-
+Stream<T> filter(Predicate<? super T> predicate)
+
+For example, this filters all elements that begin with the letter m:
+
+Stream<String> s = Stream.of("monkey", "gorilla", "bonobo");
+s.filter(x -> x.startsWith("m"))
+ .forEach(System.out::print); // monkey
+
+
+distinct()
+signature - Stream<T> distinct()
+
+Here's an example:
+Stream<String> s = Stream.of("duck", "duck", "duck", "goose");
+s.distinct()
+ .forEach(System.out::print); // duckgoose
+
+
+limit() and skip()
+example
+
+Stream<Integer> s = Stream.iterate(1, n -> n + 1);
+s.skip(5)
+ .limit(2)
+ .forEach(System.out::print); // 67
+
+
+
+map()
+example
+Stream<String> s = Stream.of("monkey", "gorilla", "bonobo");
+s.map(String::length)
+ .forEach(System.out::print); // 676
+
+
+flatMap()
+example
+
+List<String> zero = List.of();
+var one = List.of("Bonobo");
+var two = List.of("Mama Gorilla", "Baby Gorilla");
+Stream<List<String>> animals = Stream.of(zero, one, two);
+animals.flatMap(m -> m.stream())
+ .forEach(System.out::println);
+
+
+
+sorted()
+signature:
+
+Stream<T> sorted()
+Stream<T> sorted(Comparator<? super T> comparator)
+
+Stream<String> s = Stream.of("brown-", "bear-");
+s.sorted()
+ .forEach(System.out::print); // bear-brown
+
+Stream<String> s = Stream.of("brown bear-", "grizzly-");
+s.sorted(Comparator.reverseOrder())
+ .forEach(System.out::print); // grizzly-brown bear
+
+
+ s.sorted(Comparator::reverseOrder); // DOES NOT COMPILE - не метод, без ()
+
+
+
+ peek()
+ Stream<T> peek(Consumer<? super T> action)
+
+var stream = Stream.of("black bear", "brown bear", "grizzly");
+long count = stream.filter(s -> s.startsWith("g"))
+ .peek(System.out::println).count(); // grizzly
+System.out.println(count); // 1
+
+
+
+Danger: Changing State with peek()
+
+var numbers = new ArrayList<>();
+var letters = new ArrayList<>();
+numbers.add(1);
+letters.add('a');
+Stream<List<?>> stream = Stream.of(numbers, letters);
+stream.map(List::size).forEach(System.out::print); // 11
+
+
+Now we add a peek() call and note that Java doesn't prevent us from writing bad peek code.
+ Stream<List<?>> bad = Stream.of(numbers, letters);
+ bad.peek(x -> x.remove(0))
+ .map(List::size)
+ .forEach(System.out::print); // 00
+This example is bad because peek() is modifying the data structure that is used in the stream, which
+causes the result of the stream pipeline to be different than if the peek wasn't present.
+
+
+Now what do you think this prints?
+ var infinite = Stream.iterate(1, x -> x + 1);
+ infinite.limit(5)
+ .peek(System.out::print)
+ .filter(x -> x % 2 == 1)
+ .forEach(System.out::print);  // 11233455
+
+ Reversing the order of the intermediate operations changes the result.
+ var infinite = Stream.iterate(1, x -> x + 1);
+ infinite.filter(x -> x % 2 == 1)
+ .limit(5)
+ .forEach(System.out::print); // 13579
+
+
+ Finally, what do you think this prints?
+ var infinite = Stream.iterate(1, x -> x + 1);
+ infinite.filter(x -> x % 2 == 1)
+ .peek(System.out::print)
+ .limit(5)
+ .forEach(System.out::print);
+
+The answer is 1133557799. Since filter() is before peek(), we see only the odd numbers.
+
+
+
+Working with Primitive Streams
+
+Stream<Integer> stream = Stream.of(1, 2, 3);
+System.out.println(stream.reduce(0, (s, n) -> s + n)); // 6
+
+Stream<Integer> stream = Stream.of(1, 2, 3);
+System.out.println(stream.mapToInt(x -> x).sum()); // 6
+This time, we converted our Stream<Integer> to an IntStream and asked the IntStream to calculate the
+sum for us. An IntStream has many of the same intermediate and terminal methods as a Stream but
+includes specialized methods for working with numeric data.
+
+IntStream intStream = IntStream.of(1, 2, 3);
+OptionalDouble avg = intStream.average();
+System.out.println(avg.getAsDouble()); // 2.0
+
+Creating Primitive Streams
+Here are three types of primitive streams.
+IntStream: Used for the primitive types int, short, byte, and char
+LongStream: Used for the primitive type long
+DoubleStream: Used for the primitive types double and float
+
+
+When you see the word stream on the exam, pay attention to the case. With a capital
+S or in code, Stream is the name of a class that contains an Object type. With a lowercase s, a stream
+is a concept that might be a Stream, DoubleStream, IntStream, or LongStream.
+
+
+Method                              Primitive stream        Description
+OptionalDouble average()            IntStream               The arithmetic mean of the elements
+                                    LongStream
+                                    DoubleStream
+
+Stream<T> boxed()                   IntStream               A Stream<T> where T is the wrapper class associated
+                                    LongStream              with the primitive value
+                                    DoubleStream
+
+OptionalInt max()                   IntStream               The maximum element of the stream
+OptionalLong max()                  LongStream              The maximum element of the stream
+OptionalDouble max()                DoubleStream            The maximum element of the stream
+
+OptionalInt min()                   IntStream               The minimum element of the stream
+OptionalLong min()                  LongStream              The minimum element of the stream
+OptionalDouble min()                DoubleStream            The minimum element of the stream
+
+IntStream range(int a, int b)       IntStream               Returns a primitive stream from a (inclusive)
+LongStream range(long a, long b)    LongStream              to b (exclusive)
+
+IntStream rangeClosed(int           IntStream               Returns a primitive stream from a (inclusive)
+a, int b)                                                   to b (inclusive)
+
+LongStream rangeClosed(long         LongStream              Returns a primitive stream from a (inclusive)
+a, int b)                                                   to b (inclusive)
+
+int sum()                           IntStream               Returns the sum of the elements in the stream
+long sum()                          LongStream              Returns the sum of the elements in the stream
+double sum()                        DoubleStream            Returns the sum of the elements in the stream
+
+IntSummaryStatistics                IntStream               Returns an object containing numerous stream
+summaryStatistics()                                         statistics such as the average, min, max, etc.
+
+LongSummaryStatistics               LongStream              Returns an object containing numerous stream
+summaryStatistics()                                         statistics such as the average, min, max, etc.
+
+DoubleSummaryStatistics             DoubleStream            Returns an object containing numerous stream
+summaryStatistics()                                         statistics such as the average, min, max, etc.
+
+
+
+
+You can create an empty stream with this:
+DoubleStream empty = DoubleStream.empty();
+
+Another way is to use the of() factory method from a single value or by using the varargs overload.
+
+DoubleStream oneValue = DoubleStream.of(3.14);
+oneValue.forEach(System.out::println);
+DoubleStream varargs = DoubleStream.of(1.0, 1.1, 1.2);
+varargs.forEach(System.out::println);
+
+This code outputs the following:
+3.14
+1.0
+1.1
+1.2
+
+
+You can also use the two methods for creating infinite streams, just like we did with Stream.
+var random = DoubleStream.generate(Math::random);
+var fractions = DoubleStream.iterate(.5, d -> d / 2);
+random.limit(3).forEach(System.out::println);
+fractions.limit(3).forEach(System.out::println);
+
+The output from when we ran this code was as follows:
+0.07890654781186413
+0.28564363465842346
+0.6311403511266134
+0.5
+0.25
+0.125
+
+
+
+Mapping Streams
+
+Mapping methods between types of streams
+Source stream       To create       To create       To create       To create
+class               Stream          DoubleStream    IntStream       LongStream
+
+Stream<T>           map()           mapToDouble()   mapToInt()      mapToLong()
+
+DoubleStream        mapToObj()      map()           mapToInt()      mapToLong()
+
+IntStream           mapToObj()      mapToDouble()   map()           mapToLong()
+
+LongStream          mapToObj()      mapToDouble()   mapToInt()      map()
+
+
+Stream<String> objStream = Stream.of("penguin", "fish");
+IntStream intStream = objStream.mapToInt(s -> s.length());
+This function takes an Object, which is a String in this case. The function returns an int.
+
+
+Function parameters when mapping between types of streams
+
+Source stream       To create Stream        To create           To create           To create
+class                                       DoubleStream        IntStream           LongStream
+
+Stream<T>           Function<T,R>           ToDoubleFunction<T> ToIntFunction<T>    ToLongFunction<T>
+
+DoubleStream        Double                  DoubleUnary         DoubleToInt         DoubleToLong
+                    Function<R>             Operator            Function            Function
+
+IntStream           IntFunction<R>          IntToDouble         IntUnary            IntToLong
+                                            Function            Operator            Function
+
+LongStream          Long                    LongToDouble        LongToInt           LongUnary
+                    Function<R>             Function            Function            Operator
+
+
+
+
+
+
+
+
+
+Using flatMap()
+The flatMap() method exists on primitive streams as well. It works the same way as on a regular
+Stream except the method name is different. Here's an example:
+var integerList = new ArrayList<Integer>();
+IntStream ints = integerList.stream()
+    .flatMapToInt(x -> IntStream.of(x));
+
+DoubleStream doubles = integerList.stream()
+    .flatMapToDouble(x -> DoubleStream.of(x));
+LongStream longs = integerList.stream()
+    .flatMapToLong(x -> LongStream.of(x));
+
+
+Additionally, you can create a Stream from a primitive stream. These methods show two ways of
+accomplishing this:
+private static Stream<Integer> mapping(IntStream stream) {
+ return stream.mapToObj(x -> x);
+}
+private static Stream<Integer> boxing(IntStream stream) {
+ return stream.boxed();
+}
+
+
+Using Optional with Primitive Streams
+
+var stream = IntStream.rangeClosed(1,10);
+OptionalDouble optional = stream.average()
+
+The return type is not the Optional you have become accustomed to using. It is a new type called
+OptionalDouble. Why do we have a separate type, you might wonder? Why not just use
+Optional<Double>? The difference is that OptionalDouble is for a primitive and Optional<Double> is
+for the Double wrapper class. Working with the primitive optional class looks similar to working with the
+Optional class itself.
+    optional.ifPresent(System.out::println); // 5.5
+    System.out.println(optional.getAsDouble()); // 5.5
+    System.out.println(optional.orElseGet(() -> Double.NaN)); // 5.5
+The only noticeable difference is that we called getAsDouble() rather than get(). This makes it clear that
+we are working with a primitive. Also, orElseGet() takes a DoubleSupplier instead of a Supplier.
+
+
+
+As with the primitive streams, there are three type-specific classes for primitives. Table 4.10 shows the
+minor differences among the three.
+
+                                    OptionalDouble          OptionalInt             OptionalLong
+
+Getting as a primitive              getAsDouble()           getAsInt()              getAsLong()
+
+orElseGet() parameter type          DoubleSupplier          IntSupplier             LongSupplier
+
+Return type of max() and min()      OptionalDouble          OptionalInt             OptionalLong
+
+Return type of sum()                double                  int                     long
+
+Return type of average()            OptionalDouble          OptionalDouble          OptionalDouble
+
+
+
+Let's try an example to make sure that you understand this.
+    5: LongStream longs = LongStream.of(5, 10);
+    6: long sum = longs.sum();
+    7: System.out.println(sum); // 15
+    8: DoubleStream doubles = DoubleStream.generate(() -> Math.PI);
+    9: OptionalDouble min = doubles.min(); // runs infinitely
+
+
+Summarizing Statistics
+
+You've learned enough to be able to get the maximum value from a stream of int primitives. If the stream
+is empty, we want to throw an exception.
+
+private static int max(IntStream ints) {
+ OptionalInt optional = ints.max();
+ return optional.orElseThrow(RuntimeException::new);
+}
+
+
+Statistic is just a big word for a number that was calculated from data.
+private static int range(IntStream ints) {
+ IntSummaryStatistics stats = ints.summaryStatistics();
+ if (stats.getCount() == 0) throw new RuntimeException();
+ return stats.getMax()-stats.getMin();
+}
+
+Here we asked Java to perform many calculations about the stream. Summary statistics include the
+following:
+    Smallest number (minimum): getMin()
+    Largest number (maximum): getMax()
+    Average: getAverage()
+    Sum: getSum()
+    Number of values: getCount()
+
+If the stream were empty, we'd have a count and sum of zero. The other methods would return an empty
+optional.
+
+
+
+Learning the Functional Interfaces for Primitives
+
+Functional Interfaces for boolean
+It works just as you've come to expect from functional interfaces. Here's an example:
+
+12: BooleanSupplier b1 = () -> true;
+13: BooleanSupplier b2 = () -> Math.random()> .5;
+14: System.out.println(b1.getAsBoolean()); // true
+15: System.out.println(b2.getAsBoolean()); // false
+
+
+Functional Interfaces for double, int, and long
+
+Common functional interfaces for primitives
+
+Functional interfaces       # parameters        Return type         Single abstract method
+
+DoubleSupplier              0                   double              getAsDouble
+IntSupplier                                     int                 getAsInt
+LongSupplier                                    long                getAsLong
+
+DoubleConsumer              1 (double)          void                accept
+IntConsumer                 1 (int)
+LongConsumer                1 (long)
+
+DoublePredicate             1 (double)          double              test
+IntPredicate                1 (int)
+LongPredicate               1 (long)
+
+DoubleFunction<R>           1 (double)          R                   apply
+IntFunction<R>              1 (int)
+LongFunction<R>             1 (long)
+
+DoubleUnaryOperator         1 (double)          double              applyAsDouble
+IntUnaryOperator            1 (int)             int                 applyAsInt
+LongUnaryOperator           1 (long)            long                applyAsLong
+
+DoubleBinaryOperator        2 (double, double)  double              applyAsDouble
+IntBinaryOperator           2 (int, int)        int                 applyAsInt
+LongBinaryOperator          2 (long, long)      long                applyAsLong
+
+ */
+
+
+
 
 
 
