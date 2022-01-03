@@ -1,6 +1,9 @@
 package Chapter4;
 
+import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -1046,8 +1049,259 @@ LongBinaryOperator          2 (long, long)      long                applyAsLong
 
 
 
+/*
+Working with Advanced Stream Pipeline Concepts
+
+Linking Streams to the Underlying Data
+What do you think this outputs?
+
+25: var cats = new ArrayList<String>();
+26: cats.add("Annie");
+27: cats.add("Ripley");
+28: var stream = cats.stream();
+29: cats.add("KC");
+30: System.out.println(stream.count());  // 3
+
+Chaining Optionals
+
+Suppose that you are given an Optional<Integer> and asked to print the value,
+but only if it is a threedigit number. Without functional programming, you could write the following:
+
+private static void threeDigit(Optional<Integer> optional) {
+     if (optional.isPresent()) { // outer if
+         var num = optional.get();
+         var string = "" + num;
+         if (string.length() == 3) // inner if
+         System.out.println(string);
+     }
+}
+
+It works, but it contains nested if statements. That's extra complexity. Let's try this again with functional
+programming.
+
+private static void threeDigit(Optional<Integer> optional) {
+     optional.map(n -> "" + n) // part 1
+     .filter(s -> s.length() == 3) // part 2
+     .ifPresent(System.out::println); // part 3
+}
 
 
+Now suppose that we wanted to get an Optional<Integer> representing the length of the String
+contained in another Optional. Easy enough.
+
+Optional<Integer> result = optional.map(String::length);
+
+What if we had a helper method that did the logic of calculating something for us that returns
+
+Optional<Integer>? Using map doesn't work.
+Optional<Integer> result = optional
+ .map(ChainingOptionals::calculator); // DOES NOT COMPILE
+
+The problem is that calculator returns Optional<Integer>. The map() method adds another Optional,
+giving us Optional<Optional<Integer>>. Well, that's no good. The solution is to call flatMap() instead.
+
+Optional<Integer> result = optional
+ .flatMap(ChainingOptionals::calculator);
+
+This one works because flatMap removes the unnecessary layer. In other words, it flattens the result.
+Chaining calls to flatMap() is useful when you want to transform one Optional type to another.
+
+
+
+
+Collecting Results
+Examples of grouping/partitioning collectors
+
+Collector                               Description                     Return value when passed
+                                                                        to collect
+
+averagingDouble(ToDoubleFunction f)     Calculates the average for our  Double
+averagingInt(ToIntFunction f)           three core primitive types
+averagingLong(ToLongFunction f)
+
+---
+Stream<String> s = Stream.of("7", "8", "9", "10");
+double ans = s.collect(Collectors.averagingDouble(num -> Double.parseDouble(num))); // 8.5
+---
+
+counting()                              Counts the number of elements   Long
+
+---
+Stream<String> s = Stream.of("1", "2", "3", "4");
+long ans = s.collect(Collectors.counting());  // 4
+---
+
+
+groupingBy(Function f)                  Creates a map grouping by the   Map<K, List<T>>
+groupingBy(Function f, Collector dc)    specified function with the
+groupingBy(Function f, Supplier s,      optional map type supplier and
+Collector dc)                           optional downstream collector
+
+---
+Чтобы сгруппировать данные по какому-нибудь признаку, нам надо использовать в связке
+метод collect() объекта Stream и метод Collectors.groupingBy().
+
+Stream<Phone> phoneStream = Stream.of(
+            new Phone("iPhone X", "Apple", 600),
+            new Phone("Pixel 2", "Google", 500),
+            new Phone("iPhone 8", "Apple",450),
+            new Phone("Galaxy S9", "Samsung", 440),
+            new Phone("Galaxy S8", "Samsung", 340));
+
+        Map<String, List<Phone>> phonesByCompany = phoneStream.collect(
+                Collectors.groupingBy(Phone::getCompany));
+
+        for(Map.Entry<String, List<Phone>> item : phonesByCompany.entrySet()){
+
+            System.out.println(item.getKey());
+            for(Phone phone : item.getValue()){
+
+                System.out.println(phone.getName());
+            }
+            System.out.println();
+        }
+
+Google
+Pixel 2
+
+Apple
+iPhone X
+iPhone 8
+
+Samsung
+Galaxy S9
+Galaxy S8
+
+Итак, для создания групп в метод phoneStream.collect() передается вызов функции Collectors.groupingBy(),
+которая с помощью выражения Phone::getCompany группирует объекты по компании. В итоге будет создан
+объект Map, в котором ключами являются названия компаний, а значениями - список связанных
+с компаниями телефонов.
+
+---
+
+joining(CharSequence cs)                Creates a single String using  String
+                                        cs as a delimiter between
+                                        elements if one is specified
+
+---
+Метод joining () класса Collectors в Java используется для объединения различных элементов
+символьного или строкового массива в один строковый объект.
+char[] ch = { 'G', 'e', 'e', 'k', 's',
+
+                      'f', 'o', 'r',
+
+                      'G', 'e', 'e', 'k', 's' };
+
+
+String chString = Stream.of(ch).map(arr -> new String(arr)).collect(Collectors.joining());
+System.out.println(chString); // GeeksforGeeks
+---
+
+maxBy(Comparator c)                     Finds the largest/smallest     Optional<T>
+minBy(Comparator c)                     elements
+
+---
+Map<String, Optional<Phone>> phonesByCompany = phoneStream.collect(
+        Collectors.groupingBy(Phone::getCompany,
+                Collectors.minBy(Comparator.comparing(Phone::getPrice))));
+
+for(Map.Entry<String, Optional<Phone>> item : phonesByCompany.entrySet()){
+
+    System.out.println(item.getKey() + " - " + item.getValue().get().getName());
+}
+
+Консольный вывод:
+    Google - Pixel 2
+    Apple - iPhone 8
+    Samsung - Galaxy S8
+---
+
+mapping(Function f, Collector dc)       Adds another level of           Collector
+                                        collectors
+
+---
+Метод mapping позволяет дополнительно обработать данные и задать функцию отображения объектов
+ из потока на какой-нибудь другой тип данных.
+
+ Map<String, List<String>> phonesByCompany = phoneStream.collect(
+    Collectors.groupingBy(Phone::getCompany,
+        Collectors.mapping(Phone::getName, Collectors.toList())));
+
+for(Map.Entry<String, List<String>> item : phonesByCompany.entrySet()){
+
+    System.out.println(item.getKey());
+    for(String name : item.getValue()){
+        System.out.println(name);
+    }
+}
+
+Выражение Collectors.mapping(Phone::getName, Collectors.toList()) указывает,
+что в группу будут выделятся названия смартфонов, причем группа будет представлять объект List.
+---
+
+
+partitioningBy(Predicate p)             Creates a map grouping by the   Map<Boolean, List<T>>
+partitioningBy(Predicate p,             specified predicate with the
+Collector dc)                           optional further downstream
+                                        collector
+
+---
+
+Метод Collectors.partitioningBy() имеет похожее действие, только он делит элементы на группы по принципу,
+соответствует ли элемент определенному условию.
+
+Map<Boolean, List<Phone>> phonesByCompany = phoneStream.collect(
+                Collectors.partitioningBy(p->p.getCompany()=="Apple"));
+
+for(Map.Entry<Boolean, List<Phone>> item : phonesByCompany.entrySet()){
+
+    System.out.println(item.getKey());
+    for(Phone phone : item.getValue()){
+
+        System.out.println(phone.getName());
+    }
+    System.out.println();
+}
+
+В данном случае с помощью условия p->p.getCompany()=="Apple" мы смотрим, принадлежит ли телефон компании Apple.
+Если телефон принадлежит этой компании, то он попадает в одну группу, если нет, то в другую.
+
+---
+
+summarizingDouble(ToDoubleFunction      Calculates average, min, max,   DoubleSummaryStatistics
+f)                                      and so on                       IntSummaryStatistics
+summarizingInt(ToIntFunction f)                                         LongSummaryStatistics
+summarizingLong(ToLongFunction f)
+
+---
+
+---
+
+summingDouble(ToDoubleFunction f)       Calculates the sum for our      Double
+summingInt(ToIntFunction f)             three core primitive types      Integer
+summingLong(ToLongFunction f)                                           Long
+
+toList()                                Creates an arbitrary type       List
+toSet()                                 of list or set                  Set
+
+toCollection(Supplier s)                Creates a Collection            Collection
+                                        of the specified type
+
+
+toMap(Function k, Function v)           Creates a map using functions   Map
+toMap(Function k, Function v,           to map the keys, values,
+BinaryOperator m)                       an optional merge function,
+toMap(Function k, Function v,           and an optional map type supplier
+BinaryOperator m, Supplier s)
+
+
+
+
+
+
+
+
+ */
 
 
 
