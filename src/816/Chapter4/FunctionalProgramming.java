@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import java.util.Arrays;
+
 public class FunctionalProgramming {
 }
 
@@ -49,8 +51,6 @@ LocalDate d2 = s2.get();
 
 System.out.println(d1); // 2020–02–20
 System.out.println(d2); // 2020–02–20
-
-
 
 A Supplier is often used when constructing new objects. For example, we can
 print two empty StringBuilder objects.
@@ -564,7 +564,6 @@ Can you write a reduction to multiply all of the Integer objects in a stream? Tr
 Our solution is shown here:
 Stream<Integer> stream = Stream.of(3, 5, 6);
 System.out.println(stream.reduce(1, (a, b) -> a*b)); // 90
-
 
 2) Optional<T> reduce(BinaryOperator<T> accumulator)
 In many cases, the identity isn't really
@@ -1220,23 +1219,34 @@ mapping(Function f, Collector dc)       Adds another level of           Collecto
                                         collectors
 
 ---
-Метод mapping позволяет дополнительно обработать данные и задать функцию отображения объектов
- из потока на какой-нибудь другой тип данных.
+public class MappingCollector {
+  static List<Employee> employeeList
+      = Arrays.asList(new Employee("Tom Jones", 45, 15000.00),
+      new Employee("Harry Andrews", 45, 7000.00),
+      new Employee("Ethan Hardy", 65, 8000.00),
+      new Employee("Nancy Smith", 22, 10000.00),
+      new Employee("Deborah Sprightly", 29, 9000.00));
 
- Map<String, List<String>> phonesByCompany = phoneStream.collect(
-    Collectors.groupingBy(Phone::getCompany,
-        Collectors.mapping(Phone::getName, Collectors.toList())));
-
-for(Map.Entry<String, List<String>> item : phonesByCompany.entrySet()){
-
-    System.out.println(item.getKey());
-    for(String name : item.getValue()){
-        System.out.println(name);
-    }
+  public static void main(String[] args) {
+    List<String> employeeNames = employeeList
+        .stream()
+        .collect(Collectors.mapping(Employee::getName, Collectors.toList()));
+    System.out.println("List of employee names:" + employeeNames);
+  }
 }
 
-Выражение Collectors.mapping(Phone::getName, Collectors.toList()) указывает,
-что в группу будут выделятся названия смартфонов, причем группа будет представлять объект List.
+OUTPUT of the above code
+Set of employee names:[Tom Jones, Harry Andrews, Ethan Hardy, Nancy Smith, Deborah Sprightly]
+
+
+еще пример
+public static void main(String[] args) {
+  Optional<Integer> maxAge = employeeList
+      .stream()
+      .collect(Collectors.mapping((Employee emp) -> emp.getAge(),
+            Collectors.maxBy(Integer::compareTo)));
+  System.out.println("Max Age: " + maxAge.get());  // 65
+}
 ---
 
 
@@ -1246,26 +1256,19 @@ Collector dc)                           optional further downstream
                                         collector
 
 ---
+создание целочисленного потока
+Stream<Integer> s = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        // метод для разделения потока элементов на
+Map<Boolean, List<Integer> > map = s.collect(
+                Collectors.partitioningBy(num -> num > 3));
+// Отображение результата в виде карты
+// истина, если больше 3, ложь в противном случае
+System.out.println("Elements in stream partitioned by "less than equal to 3: \n" + map);
 
-Метод Collectors.partitioningBy() имеет похожее действие, только он делит элементы на группы по принципу,
-соответствует ли элемент определенному условию.
+Выход:
 
-Map<Boolean, List<Phone>> phonesByCompany = phoneStream.collect(
-                Collectors.partitioningBy(p->p.getCompany()=="Apple"));
-
-for(Map.Entry<Boolean, List<Phone>> item : phonesByCompany.entrySet()){
-
-    System.out.println(item.getKey());
-    for(Phone phone : item.getValue()){
-
-        System.out.println(phone.getName());
-    }
-    System.out.println();
-}
-
-В данном случае с помощью условия p->p.getCompany()=="Apple" мы смотрим, принадлежит ли телефон компании Apple.
-Если телефон принадлежит этой компании, то он попадает в одну группу, если нет, то в другую.
-
+Elements in stream partitioned by less than equal to 3:
+{false=[1, 2, 3], true=[4, 5, 6, 7, 8, 9, 10]}
 ---
 
 summarizingDouble(ToDoubleFunction      Calculates average, min, max,   DoubleSummaryStatistics
@@ -1273,13 +1276,32 @@ f)                                      and so on                       IntSumma
 summarizingInt(ToIntFunction f)                                         LongSummaryStatistics
 summarizingLong(ToLongFunction f)
 
+
+еще пример
+Map<Boolean, Long> map = s.collect(Collectors.partitioningBy(
+                    num -> (num > 3), Collectors.counting()));
+Выход:
+
+Elements in stream partitioned by less than equal to 3:
+{false=3, true=7}
 ---
 
----
 
 summingDouble(ToDoubleFunction f)       Calculates the sum for our      Double
 summingInt(ToIntFunction f)             three core primitive types      Integer
 summingLong(ToLongFunction f)                                           Long
+
+---
+public class Main {
+  public static void main(String[] args) {
+    Stream<String> s = Stream.of("1","2","3");
+
+    double o =  s.collect(Collectors.summingDouble(n->Double.parseDouble(n)));
+
+    System.out.println(o); // 6.0
+  }
+}
+---
 
 toList()                                Creates an arbitrary type       List
 toSet()                                 of list or set                  Set
@@ -1287,6 +1309,18 @@ toSet()                                 of list or set                  Set
 toCollection(Supplier s)                Creates a Collection            Collection
                                         of the specified type
 
+---
+// Creating a string stream
+Stream<String> s = Stream.of("Geeks", "for", "GeeksClasses");
+// Using toCollection() method
+// to create a collection
+Collection<String> names = s.collect(Collectors.toCollection(TreeSet::new));
+// Printing the elements
+System.out.println(names);
+
+Output:
+[Geeks, GeeksClasses, for]
+---
 
 toMap(Function k, Function v)           Creates a map using functions   Map
 toMap(Function k, Function v,           to map the keys, values,
@@ -1295,16 +1329,195 @@ toMap(Function k, Function v,           and an optional map type supplier
 BinaryOperator m, Supplier s)
 
 
+---
+Создать строку без повторяющихся ключей
+Stream<String[]> str = Stream.of(new String[][] { { "GFG", "GeeksForGeeks" },
+                                           { "g", "geeks" },
+                                           { "G", "Geeks" } });
 
+        // Преобразовать строку в карту
+        // используя метод toMap ()
 
+ Map<String, String> map = str.collect( Collectors.toMap(p -> p[0], p -> p[1]));
+System.out.println("Map:" + map);
+// Map:{G=Geeks, g=geeks, GFG=GeeksForGeeks}
 
+второй вариант
+Map<String, String> map = str.collect(Collectors.toMap(p -> p[0], p -> p[1], (s, a) -> s + ", " + a));
+// Map:{g=geeks, GFG=GeeksForGeeks, geeksforgeeks}
 
+третий вариант
+LinkedHashMap<String, String> map2 = Ss1.collect(Collectors.toMap(
+p -> p[0], p -> p[1], (s, a) -> s + ", " + a, LinkedHashMap::new));
 
-
+// Map:{GFG=GeeksForGeeks, Geeks, g=geeks}
+---
  */
 
 
+// Collecting Using Basic Collectors
+/*
+Luckily, many of these collectors work in the same way. Let's look at an example.
 
+var ohMy = Stream.of("lions", "tigers", "bears");
+String result = ohMy.collect(Collectors.joining(", "));
+System.out.println(result); // lions, tigers, bears
+
+// Notice how the predefined collectors are in the Collectors class rather than the Collector interface.
+
+Let's try another one. What is the average length of the three animal names?
+
+var ohMy = Stream.of("lions", "tigers", "bears");
+Double result = ohMy.collect(Collectors.averagingInt(String::length));
+System.out.println(result); // 5.333333333333333
+
+// The pattern is the same. We pass a collector to collect()
+
+// еще пример
+var ohMy = Stream.of("lions", "tigers", "bears");
+TreeSet<String> result = ohMy
+ .filter(s -> s.startsWith("t"))
+ .collect(Collectors.toCollection(TreeSet::new));
+System.out.println(result); // [tigers]
+
+// This time we have all three parts of the stream pipeline. Stream.of() is the source
+// for the stream. The intermediate operation is filter(). Finally, the terminal operation
+// is collect(), which creates a TreeSet. If we didn't care which implementation of Set we got,
+// we could have written Collectors.toSet() instead.
+
+ */
+
+// Collecting into Maps
+/*
+ Let's start with a straightforward example to create a map from a stream.
+
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<String, Integer> map = ohMy.collect(Collectors.toMap(s -> s, String::length));
+System.out.println(map); // {lions=5, bears=5, tigers=6}
+
+Now we want to do the reverse and map the length of the animal name to the name itself. Our first
+incorrect attempt is shown here:
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, String> map = ohMy.collect(Collectors.toMap(
+ String::length,
+ k -> k)); // BAD
+
+ Running this gives an exception similar to the following:
+Exception in thread "main"
+ java.lang.IllegalStateException: Duplicate key 5
+
+
+ How thoughtful. Let's suppose that our requirement is to create a comma-separated String with
+the animal names. We could write this:
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, String> map = ohMy.collect(Collectors.toMap(
+ String::length,
+ k -> k,
+ (s1, s2) -> s1 + "," + s2));
+System.out.println(map); // {5=lions,bears, 6=tigers}
+System.out.println(map.getClass()); // class java.util.HashMap
+
+Suppose that we want to mandate that the code return a TreeMap instead. No problem.
+We would just add a constructor reference as a parameter.
+var ohMy = Stream.of("lions", "tigers", "bears");
+TreeMap<Integer, String> map = ohMy.collect(Collectors.toMap(
+ String::length,
+ k -> k,
+ (s1, s2) -> s1 + "," + s2,
+ TreeMap::new));
+System.out.println(map); // // {5=lions,bears, 6=tigers}
+System.out.println(map.getClass()); // class java.util.TreeMap
+
+ */
+
+// Collecting Using Grouping, Partitioning, and Mapping
+/*
+ Now suppose that we want to get groups of names by
+their length. We can do that by saying that we want to group by length.
+
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, List<String>> map = ohMy.collect(
+ Collectors.groupingBy(String::length));
+System.out.println(map); // {5=[lions, bears], 6=[tigers]}
+
+The groupingBy() collector tells collect() that it should group all of the elements of the stream into a
+Map.
+
+* Note that the function you call in groupingBy() cannot return null. It does not
+allow null keys.
+
+Suppose that we don't want a List as the value in the map and prefer a Set instead. No problem. There's
+another method signature that lets us pass a downstream collector
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, Set<String>> map = ohMy.collect(
+ Collectors.groupingBy(
+ String::length,
+ Collectors.toSet()));
+System.out.println(map); // {5=[lions, bears], 6=[tigers]}
+
+We can even change the type of Map returned through yet another parameter.
+var ohMy = Stream.of("lions", "tigers", "bears");
+TreeMap<Integer, Set<String>> map = ohMy.collect(
+ Collectors.groupingBy(
+ String::length,
+ TreeMap::new,
+ Collectors.toSet()));
+System.out.println(map); // {5=[lions, bears], 6=[tigers]}
+
+
+This is very flexible. (это нельзя в partitions). What if we want to change the type of Map returned but leave the type
+of values alone as a List? There isn't a method for this specifically because it is easy enough
+to write with the existing ones.
+var ohMy = Stream.of("lions", "tigers", "bears");
+TreeMap<Integer, List<String>> map = ohMy.collect(
+ Collectors.groupingBy(
+ String::length,
+ TreeMap::new,
+ Collectors.toList()));
+System.out.println(map);
+
+
+
+Partitioning is a special case of grouping. With partitioning, there are only two possible groups—true and
+false. Partitioning is like splitting a list into two parts.
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Boolean, List<String>> map = ohMy.collect(
+ Collectors.partitioningBy(s -> s.length() <= 5));
+System.out.println(map); // {false=[tigers], true=[lions, bears]}
+
+еще пример
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Boolean, List<String>> map = ohMy.collect(
+ Collectors.partitioningBy(s -> s.length() <= 7));
+System.out.println(map); // {false=[], true=[lions, tigers, bears]}
+
+
+
+As with groupingBy(), we can change the type of List to
+something else.
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Boolean, Set<String>> map = ohMy.collect(
+ Collectors.partitioningBy(
+ s -> s.length() <= 7,
+ Collectors.toSet()));
+System.out.println(map); // {false=[], true=[lions, tigers, bears]}
+
+
+
+Unlike groupingBy(), we cannot change the type of Map that gets returned. However, there are only two
+keys in the map, so does it really matter which Map type we use?
+
+
+Instead of using the downstream collector to specify the type, we can use any of the collectors that we've
+already shown. For example, we can group by the length of the animal name to see how many of each
+length we have.
+var ohMy = Stream.of("lions", "tigers", "bears");
+Map<Integer, Long> map = ohMy.collect(
+ Collectors.groupingBy(
+ String::length,
+ Collectors.counting()));
+System.out.println(map); // {5=2, 6=1}
+ */
 
 
 
