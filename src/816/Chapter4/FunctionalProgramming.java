@@ -225,7 +225,6 @@ Returns an Integer and takes two Integers       // BinaryOperator<Integer> ил�
 8: ____________<String, String> ex3 = (s1, s2) -> false;        // BiPredicate
 
 
-
 Ошибки
 6: Function<List<String>> ex1 = x -> x.get(0); // DOES NOT COMPILE
     - A Function needs to specify two generics.
@@ -427,10 +426,9 @@ predicate, unaryOperator)         infinite      element and then calling the Una
                                                 each subsequent element upon request.
                                                 Stops if the Predicate returns false.
 
-
 Using Common Terminal Operations
-
 Terminal stream operations
+
 Method              What happens for infinite streams           Return value        Reduction
 
 count()             Does not terminate                          long                Yes
@@ -509,8 +507,6 @@ System.out.println(infinite.anyMatch(pred)); // true
 Remember that allMatch(), anyMatch(), and noneMatch() return a boolean. By
 contrast, the find methods return an Optional because they return an element of the stream.
 
-
-
 forEach()
 signature - void forEach(Consumer<? super T> action)
 
@@ -524,8 +520,6 @@ Stream. Don't get confused on the exam when you see both approaches.
 Notice that you can't use a traditional for loop on a stream.
 Stream<Integer> s = Stream.of(1);
 for (Integer i : s) {} // DOES NOT COMPILE
-
-
 
 reduce()
 The reduce() method combines a stream into a single object. It is a reduction, which means it processes
@@ -638,9 +632,7 @@ System.out.println(set); // [f, w, l, o]
 
 Using Common Intermediate Operations
 
-filter()
-signature-
-Stream<T> filter(Predicate<? super T> predicate)
+filter() signature- Stream<T> filter(Predicate<? super T> predicate)
 
 For example, this filters all elements that begin with the letter m:
 
@@ -792,9 +784,30 @@ OptionalDouble average()            IntStream               The arithmetic mean 
                                     LongStream
                                     DoubleStream
 
+---
+IntStream stream = IntStream.of(2, 3, 4, 5, 6, 7, 8);
+OptionalDouble obj = stream.average();
+if (obj.isPresent()) {
+    System.out.println(obj.getAsDouble());
+} else {
+    System.out.println("-1");
+}
+---
+
+
 Stream<T> boxed()                   IntStream               A Stream<T> where T is the wrapper class associated
                                     LongStream              with the primitive value
                                     DoubleStream
+
+---
+ IntStream stream = IntStream.range(3, 8);
+        // Создание потока целых чисел
+        // Использование IntStream boxed () для возврата
+        // Поток, состоящий из элементов
+        // этого потока, каждый упакован в целое число.
+        Stream<Integer> stream1 = stream.boxed();
+        stream1.forEach(System.out::print); // 34567
+---
 
 OptionalInt max()                   IntStream               The maximum element of the stream
 OptionalLong max()                  LongStream              The maximum element of the stream
@@ -863,8 +876,8 @@ The output from when we ran this code was as follows:
 
 
 Mapping Streams
-
 Mapping methods between types of streams
+
 Source stream       To create       To create       To create       To create
 class               Stream          DoubleStream    IntStream       LongStream
 
@@ -875,7 +888,6 @@ DoubleStream        mapToObj()      map()           mapToInt()      mapToLong()
 IntStream           mapToObj()      mapToDouble()   map()           mapToLong()
 
 LongStream          mapToObj()      mapToDouble()   mapToInt()      map()
-
 
 Stream<String> objStream = Stream.of("penguin", "fish");
 IntStream intStream = objStream.mapToInt(s -> s.length());
@@ -932,7 +944,7 @@ private static Stream<Integer> boxing(IntStream stream) {
 Using Optional with Primitive Streams
 
 var stream = IntStream.rangeClosed(1,10);
-OptionalDouble optional = stream.average()
+OptionalDouble optional = stream.average();
 
 The return type is not the Optional you have become accustomed to using. It is a new type called
 OptionalDouble. Why do we have a separate type, you might wonder? Why not just use
@@ -985,9 +997,9 @@ private static int max(IntStream ints) {
 
 Statistic is just a big word for a number that was calculated from data.
 private static int range(IntStream ints) {
- IntSummaryStatistics stats = ints.summaryStatistics();
- if (stats.getCount() == 0) throw new RuntimeException();
- return stats.getMax()-stats.getMin();
+    IntSummaryStatistics stats = ints.summaryStatistics();
+    if (stats.getCount() == 0) throw new RuntimeException();
+    return stats.getMax()-stats.getMin();
 }
 
 Here we asked Java to perform many calculations about the stream. Summary statistics include the
@@ -1000,8 +1012,6 @@ following:
 
 If the stream were empty, we'd have a count and sum of zero. The other methods would return an empty
 optional.
-
-
 
 Learning the Functional Interfaces for Primitives
 
@@ -1024,11 +1034,40 @@ DoubleSupplier              0                   double              getAsDouble
 IntSupplier                                     int                 getAsInt
 LongSupplier                                    long                getAsLong
 
+---
+// Create a DoubleSupplier instance
+DoubleSupplier sup = () -> Math.random();
+
+// Get the double value
+// Using getAsDouble() method
+System.out.println(sup.getAsDouble());
+---
+
 DoubleConsumer              1 (double)          void                accept
 IntConsumer                 1 (int)
 LongConsumer                1 (long)
 
+---
+// Create a DoubleConsimer Instance
+DoubleConsumer display = a -> System.out.println(a * 10);
+
+// using accept() method
+display.accept(3);
+---
+
+
 DoublePredicate             1 (double)          double              test
+
+---
+// DoublePredicate to check square
+        // of x is less than 100
+        DoublePredicate db
+            = (x) -> { return x * x < 100.0; };
+        System.out.println("100 is less than 100 "
+                           + db.test(10));
+
+ ---
+
 IntPredicate                1 (int)
 LongPredicate               1 (long)
 
