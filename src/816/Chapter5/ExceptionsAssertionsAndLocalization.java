@@ -876,20 +876,100 @@ public static void main(String[] args) {
 
 
 
-// Specifying a Locale Category
+// Creating a Resource Bundle
+For now, we need English and French properties files for our Zoo resource bundle.
+First, create two properties files.
+
+Zoo_en.properties
+hello=Hello
+open=The zoo is open
+
+Zoo_fr.properties
+hello=Bonjour
+open=Le zoo est ouvert
+
+The filenames match the name of our resource bundle, Zoo. They are then followed
+by an underscore (_), target locale, and .properties file extension. We can write our
+very first program that uses a resource bundle to print this information.
+
+10: public static void printWelcomeMessage(Locale locale) {
+11: var rb = ResourceBundle.getBundle("Zoo", locale);
+12: System.out.println(rb.getString("hello")
+13: + ", " + rb.getString("open"));
+14: }
+15: public static void main(String[] args) {
+16:     var us = new Locale("en", "US");
+17:     var france = new Locale("fr", "FR");
+18:     printWelcomeMessage(us); // Hello, The zoo is open
+19:     printWelcomeMessage(france); // Bonjour, Le zoo est ouvert
+20: }
+
+Since a resource bundle contains key/value pairs, you can even loop through them to
+list all of the pairs. The ResourceBundle class provides a keySet() method to get a set of all keys.
+
+var us = new Locale("en", "US");
+ResourceBundle rb = ResourceBundle.getBundle("Zoo", us);
+rb.keySet().stream()
+ .map(k -> k + ": " + rb.getString(k))
+ .forEach(System.out::println);
+
+Будет напечатано:
+hello: Hello
+open: The zoo is open
 
 
 
+// Picking a Resource Bundle
+There are two methods for obtaining a resource bundle that you should be familiar with for the exam.
+ResourceBundle.getBundle("name");  // использует дефолтную локацию
+ResourceBundle.getBundle("name", locale);
 
 
+// Formatting Messages
+
+For example, suppose that we had this property defined:
+helloByName=Hello, {0} and {1}
+
+Given a resource bundle rb:
+String format = rb.getString("helloByName");
+System.out.print(MessageFormat.format(format, "Tammy", "Henry"));
+
+Будет напечатано:
+Hello, Tammy and Henry
 
 
+// Using the Properties Class
+
+It functions like the HashMap class, except that it uses String values for
+the keys and values. Let's create one and set some values.
+
+import java.util.Properties;
+public class ZooOptions {
+ public static void main(String[] args) {
+     var props = new Properties();
+     props.setProperty("name", "Our zoo");
+     props.setProperty("open", "10am");
+ }
+}
+
+The Properties class is commonly used in handling values that may not exist.
+System.out.println(props.getProperty("camel")); // null
+System.out.println(props.getProperty("camel", "Bob")); // Bob
+
+The Properties class also includes a get() method, but only getProperty() allows for a default value.
+For example, the following call is invalid since get() takes only a single parameter:
+props.get("open"); // 10am
+props.get("open", "The zoo will be open soon"); // DOES NOT COMPILE
 
 
+A Properties object isn't just similar to a Map; it actually inherits Map<Object,Object>.
+Но надо пользоваться методами getProperty() и setProperty()
 
-
-
-
+var props = new Properties();
+ props.put("tigerAge", "4");
+ props.put("lionAge", 5);
+ System.out.println(props.getProperty("tigerAge")); // 4
+ System.out.println(props.getProperty("lionAge")); // null
 
 
 
